@@ -1,0 +1,755 @@
+import jwt from "jsonwebtoken";
+import User from "../models/users.js";
+// import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+import cloudinary from "../utils/cloudinary.js";
+
+// retryRequest function for retrying email sending
+async function retryRequest(requestPromise, retryCount = 0) {
+  const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff delay
+  return requestPromise.catch((error) => {
+    if (error.code === "EAI_AGAIN" && retryCount < 3) {
+      console.log(
+        `DNS lookup failed for ${error.config.url}. Retrying attempt ${
+          retryCount + 1
+        } after ${delay}ms`
+      );
+      return new Promise((resolve) =>
+        setTimeout(
+          () => resolve(retryRequest(requestPromise, retryCount + 1)),
+          delay
+        )
+      );
+    } else {
+      throw error;
+    }
+  });
+}
+
+// export const createUser = async (req, res) => {
+//   //const { fullName, phoneNumber, password, email, agreeTerms, role } = req.body;
+//  const {
+//    fullName,
+//    phoneNumber,
+//    password,
+//    email,
+//    skill,
+//    experienceLevel,
+//    is_approved,
+//    agreeTerms,
+//    preferedExperienceLevel,
+//    role,
+//  } = req.body;
+//   // console.log(req.body);
+
+export const createUser = async (req, res) => {
+  const { name, phone, password, email, agreeTerms, role } = req.body;
+  try {
+    // Check if the user with the same phone number or email already exists
+    const existingUser = await User.findOne({
+      $or: [{ phoneNumber: phone }, { email }],
+    });
+    if (existingUser) {
+      console.log(existingUser.phoneNumber, existingUser.email);
+      return res.status(400).json({
+        error: "User with this phone number or email already exists",
+      });
+    }
+
+    // Hash the password
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate verification code
+    const verificationCode = crypto.randomInt(100000, 999999).toString();
+
+    // Create a new user object
+    const newUser = new User({
+      fullName: name,
+      phoneNumber: phone,
+      password,
+      // : hashedPassword,
+      email,
+      agreeTerms,
+      role,
+      verificationCode,
+      verificationCodeExpires: Date.now() + 3600000, // 1 hour
+    });
+
+    // Save the new user to the database
+    const savedUser = await newUser.save();
+
+    // Configure the email transport using environment variables
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // Use SSL/TLS
+      auth: {
+        user: "mulukendemis44@gmail.com",
+        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+      },
+    });
+
+    // Define email options
+    const mailOptions = {
+      from: "mulukendemis44@gmail.com",
+      to: email,
+      subject: "Email Verification Code",
+      text: `Your verification code is: ${verificationCode}`,
+    };
+
+    // Send the verification email
+    await retryRequest(transporter.sendMail(mailOptions));
+    console.log("Email sent successfully");
+    // console.log(savedUser);
+    // Respond to the client
+    res.status(201).json({
+      user: savedUser,
+      message:
+        "Your account was created successfully. Please check your email for the verification code.",
+    });
+  } catch (error) {
+    console.error("Error during user creation:", error);
+    res.status(500).json({ error: "An error occurred while signing up" });
+  }
+};
+
+// Get all mentors
+export const getAllMentors = async (req, res) => {
+  try {
+    const mentors = await User.find({ role: "mentor" });
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all mentees
+export const getAllMentees = async (req, res) => {
+  try {
+    const mentees = await User.find({ role: "mentee" });
+    res.status(200).json(mentees);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get mentor by ID
+export const getMentorById = async (req, res) => {
+  try {
+    const mentor = await User.findById(req.params.id);
+    if (!mentor || mentor.role !== "mentor") {
+      return res.status(404).json({ error: "Mentor not found" });
+    }
+    res.status(200).json(mentor);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get mentee by ID
+export const getMenteeById = async (req, res) => {
+  try {
+    const mentee = await User.findById(req.params.id);
+    if (!mentee || mentee.role !== "mentee") {
+      return res.status(404).json({ error: "Mentee not found" });
+    }
+    res.status(200).json(mentee);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get mentors by expertise
+export const getMentorsByExpertise = async (req, res) => {
+  try {
+    const mentors = await User.find({
+      role: "mentor",
+      expertise: req.params.expertise,
+    });
+    if (mentors.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No mentors found with the specified expertise" });
+    }
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get mentors with high rating
+export const getMentorsWithHighRating = async (req, res) => {
+  try {
+    const mentors = await User.find({ role: "mentor" })
+      .sort({ rate: -1 })
+      .limit(10);
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//find user by email
+export const findUserByEmail = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const verifyEmail = async (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (
+      user.verificationCode !== verificationCode ||
+      user.verificationCodeExpires < Date.now()
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired verification code" });
+    }
+
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+export const resendVerificationCode = async (req, res) => {
+  console.log("email resend function");
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+    console.log("kkkkkkkkkkk");
+    const verificationCode = crypto.randomInt(100000, 999999).toString();
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // Use SSL/TLS
+      auth: {
+        user: "mulukendemis44@gmail.com",
+        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+      },
+    });
+
+    // Define email options
+    const mailOptions = {
+      from: "mulukendemis44@gmail.com",
+      to: email,
+      subject: "Resend Verification Code",
+      text: `Your new OTP(one time code)  is: ${verificationCode}`,
+    };
+    // Send the verification email
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
+    res
+      .status(200)
+      .json({ message: "Verification code resent. Please check your email." });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+export const loginController = async function (req, res) {
+  const { email, phoneNumber, password } = req.body;
+  // Extract password from request body
+
+  try {
+    // Find the user based on the phone number or email
+    const user = await User.findOne({
+      $or: [{ phoneNumber }, { email }],
+    }).select("+password");
+    // Check if the user exists
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Check if password is provided
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+    // Compare the password with the hashed password
+    const isPasswordValid = await user.comparePassword(password, user.password); // Use extracted password
+    // Check if the password is correct
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign(
+      { userId: user._id, email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    // Send the token in the response
+    res.status(200).json({
+      isVerified: user.isVerified,
+      _id: user._id,
+      token,
+      role: user.role,
+      message: "successfully logged in",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "An error occurred while logging in" });
+  }
+};
+
+//TODO
+// emails, token;
+
+const sendPasswordResetEmail = async () => {
+  //TODO
+  //this is example for testing emails
+  const emails = ["amsaledemismuller@gmail.com", "amsalelij@gmail.com"];
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // Use SSL/TLS
+      auth: {
+        user: "mulukendemis44@gmail.com",
+        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+      },
+    });
+
+    const mailOptions = {
+      from: "mulukendemis44@gmail.com",
+      to: emails.join(","), // Join the array of emails into a comma-separated string
+      subject: "Password reset",
+      html: `<p>You have requested a password reset. Please follow <a href="http://localhost:5173/resetPassword/">this link</a> to reset your password. This link will expire in 1 hour.</p>`, // Close the href attribute properly
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("Password reset emails sent successfully");
+  } catch (error) {
+    console.error("Error sending password reset emails:", error);
+    throw error;
+  }
+};
+
+// Endpoint to initiate password reset
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate a unique token
+    const token = crypto.randomBytes(20).toString("hex");
+
+    // Set token expiration time (1 hour)
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    // Save user with token
+    await user.save();
+
+    // Send password reset email
+    await sendPasswordResetEmail(email, token);
+
+    // Send success response
+    return res
+      .status(200)
+      .json({ message: "Password reset email sent successfully" });
+  } catch (error) {
+    console.error("Error occurred while processing password reset:", error);
+    return res.status(error.statusCode || 500).json({
+      error:
+        error.message || "An error occurred while processing password reset",
+    });
+  }
+};
+
+// Endpoint to reset password
+export const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    // Find user by reset token
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    // // Hash the new password
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    // // Update user's password and clear reset token fields
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save updated user
+    await user.save();
+
+    // Send success response
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error occurred while resetting password:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while resetting password" });
+  }
+};
+
+// Route to handle the reset password link
+export const getResetPassword = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    // Find user by reset token
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    // Render a form for the user to reset their password
+    // Here you can redirect the user to a password reset page or render a form
+    // For example:
+    // res.render('reset-password-form', { token }); // You need to create a reset-password-form.ejs file or use your preferred templating engine
+    // Or you can redirect to a frontend route to handle the password reset process
+
+    res.status(200).json({ message: "Redirect user to password reset page" }); // Adjust the response according to your frontend handling
+  } catch (error) {
+    console.error("Error occurred while handling password reset link:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while handling password reset link" });
+  }
+};
+// Get All Users
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch Users" });
+  }
+};
+
+// Get User by ID
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found " });
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch User" });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    console.log(userId);
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(deletedUser);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete User" });
+  }
+};
+
+//for testing purposes
+//TODO
+export const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { updates } = req.body;
+    console.log("updates", updates);
+    const updateData = {};
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update user data excluding the image fields
+    Object.keys(updates).forEach((key) => {
+      if (key !== "password") {
+        updateData[key] = updates[key];
+      }
+    });
+
+    // Upload and update image fields if provided
+    if (updates.profileImage) {
+      const isSameData = Object.keys(updates.profileImage).every(
+        (key) => user.profileImage[key] === updates.profileImage[key]
+      );
+      if (!isSameData) {
+        const profileImage = await uploadImageToCloudinary(
+          updates.profileImage
+        );
+        updateData.profileImage = profileImage;
+      } else {
+        console.log("Profile image is already the same.");
+      }
+    }
+
+    // Update the user
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
+    // console.log(updateUser);
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // Send success response with updated user data
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Failed to update user" });
+  }
+};
+//if it is not working , please remove retryrequest method
+const uploadImageToCloudinary = async (imageData) => {
+  try {
+    const result = await retryRequest(
+      cloudinary.uploader.upload(imageData, {
+        upload_preset: "profile",
+      })
+    );
+    return { public_id: result.public_id, url: result.secure_url };
+  } catch (error) {
+    console.error("Error uploading image to Cloudinary:", error);
+    throw new Error("Failed to upload image to Cloudinary");
+  }
+};
+
+export const getMentorsByService = async (req, res) => {
+  const { service } = req.query;
+
+  try {
+    let mentors;
+
+    if (service === "Free") {
+      mentors = await User.find({ role: "mentor", service: "Free" });
+    } else if (service === "Paid") {
+      mentors = await User.find({ role: "mentor", service: "Paid" });
+    } else {
+      mentors = await User.find({ role: "mentor" });
+    }
+
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//match mentors for mentor
+
+export const matchMentors = async (req, res) => {
+  const user_id = req.params.id;
+
+  // Check if the user already exists
+  const user = await User.findById(user_id);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const { professionalRole, skills } = user;
+
+  try {
+    // Query the database for mentors with the specified professional role and skills
+    const mentors = await User.find({
+      _id: { $ne: user_id }, // Exclude the request sender's data
+      role: "mentor", // Filter mentors
+      $or: [
+        { professionalRole: { $regex: new RegExp(professionalRole, "i") } }, // Case-insensitive match for professional role
+        { skills: { $in: skills } }, // Match any of the provided skills
+      ],
+    }).select("-password"); // Exclude password field from the results
+
+    res.status(200).json({ mentors }); // Return matching mentors
+  } catch (error) {
+    console.error("Error matching mentors:", error);
+    res.status(500).json({ error: "An error occurred while matching mentors" });
+  }
+};
+
+// Function to send password reset email
+// const sendPasswordResetEmail = async (email, token) => {
+//   try {
+//     const transporter = nodemailer.createTransport({
+//       host: "smtp.gmail.com",
+//       port: 465,
+//       secure: true, // Use SSL/TLS
+//       auth: {
+//         user: "chilotnathnael@gmail.com",
+//         pass: "wwgl ktvw dfmn cmwg", // Use your Gmail app password or account password
+//       },
+//     });
+
+//     const mailOptions = {
+//       from: "chilotnathnael@gmail.com",
+//       to: email,
+//       subject: "Password reset",
+//       // html: `<p>You have requested a password reset. Please follow <a href="${resetPasswordURL}">this link</a> to reset your password. This link will expire in 1 hour.</p>`,
+//       html: `<p>You have requested a password reset. Please follow <a href="http://localhost:5173/resetPassword/${token}">this link</a> to reset your password. This link will expire in 1 hour.</p>`,
+//     };
+
+//     await transporter.sendMail(mailOptions);
+//     console.log("Password reset email sent successfully");
+//   } catch (error) {
+//     console.error("Error sending password reset email:", error);
+//     throw error;
+//   }
+// };
+
+// // Endpoint to initiate password reset
+// export const forgotPassword = async (req, res) => {
+//   const { email } = req.body;
+//   try {
+//     // Find user by email
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     // Generate a unique token
+//     const token = crypto.randomBytes(20).toString("hex");
+
+//     // Set token expiration time (1 hour)
+//     user.resetPasswordToken = token;
+//     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+//     // Save user with token
+//     await user.save();
+
+//     // Send password reset email
+//     await sendPasswordResetEmail(email, token);
+
+//     // Send success response
+//     return res
+//       .status(200)
+//       .json({ message: "Password reset email sent successfully" });
+//   } catch (error) {
+//     console.error("Error occurred while processing password reset:", error);
+//     return res.status(error.statusCode || 500).json({
+//       error:
+//         error.message || "An error occurred while processing password reset",
+//     });
+//   }
+// };
+
+// // Endpoint to reset password
+// export const resetPassword = async (req, res) => {
+//   const { token } = req.params;
+//   const { password } = req.body;
+
+//   try {
+//     // Find user by reset token
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({ error: "Invalid or expired token" });
+//     }
+
+//     // // Hash the new password
+//     // const hashedPassword = await bcrypt.hash(password, 10);
+
+//     // // Update user's password and clear reset token fields
+//     user.password = password;
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
+
+//     // Save updated user
+//     await user.save();
+
+//     // Send success response
+//     return res.status(200).json({ message: "Password reset successfully" });
+//   } catch (error) {
+//     console.error("Error occurred while resetting password:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "An error occurred while resetting password" });
+//   }
+// };
+
+// // Route to handle the reset password link
+// export const getResetPassword = async (req, res) => {
+//   const { token } = req.params;
+
+//   try {
+//     // Find user by reset token
+//     const user = await User.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+
+//     if (!user) {
+//       return res.status(400).json({ error: "Invalid or expired token" });
+//     }
+
+//     // Render a form for the user to reset their password
+//     // Here you can redirect the user to a password reset page or render a form
+//     // For example:
+//     // res.render('reset-password-form', { token }); // You need to create a reset-password-form.ejs file or use your preferred templating engine
+//     // Or you can redirect to a frontend route to handle the password reset process
+
+//     res.status(200).json({ message: "Redirect user to password reset page" }); // Adjust the response according to your frontend handling
+//   } catch (error) {
+//     console.error("Error occurred while handling password reset link:", error);
+//     return res
+//       .status(500)
+//       .json({ error: "An error occurred while handling password reset link" });
+//   }
+// };
+
+//
