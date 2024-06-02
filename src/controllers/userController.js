@@ -27,22 +27,6 @@ async function retryRequest(requestPromise, retryCount = 0) {
   });
 }
 
-// export const createUser = async (req, res) => {
-//   //const { fullName, phoneNumber, password, email, agreeTerms, role } = req.body;
-//  const {
-//    fullName,
-//    phoneNumber,
-//    password,
-//    email,
-//    skill,
-//    experienceLevel,
-//    is_approved,
-//    agreeTerms,
-//    preferedExperienceLevel,
-//    role,
-//  } = req.body;
-//   // console.log(req.body);
-
 export const createUser = async (req, res) => {
   const { name, phone, password, email, agreeTerms, role } = req.body;
   try {
@@ -206,6 +190,7 @@ export const findUserByEmail = async (req, res) => {
   }
 };
 
+//for email address verification
 export const verifyEmail = async (req, res) => {
   const { email, verificationCode } = req.body;
 
@@ -235,6 +220,7 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+// for email resend
 export const resendVerificationCode = async (req, res) => {
   console.log("email resend function");
   const { email } = req.body;
@@ -281,6 +267,7 @@ export const resendVerificationCode = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+//for login
 export const loginController = async function (req, res) {
   const { email, phoneNumber, password } = req.body;
   // Extract password from request body
@@ -594,22 +581,25 @@ export const getMentorsByService = async (req, res) => {
 export const matchMentors = async (req, res) => {
   const user_id = req.params.id;
 
-  // Check if the user already exists
-  const user = await User.findById(user_id);
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  const { professionalRole, skills } = user;
-
   try {
+    // Check if the user already exists
+    const user = await User.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { professionalRole, skills } = user;
+
+    // Ensure skills is an array
+    const skillsArray = Array.isArray(skills) ? skills : [skills];
+
     // Query the database for mentors with the specified professional role and skills
     const mentors = await User.find({
       _id: { $ne: user_id }, // Exclude the request sender's data
       role: "mentor", // Filter mentors
       $or: [
         { professionalRole: { $regex: new RegExp(professionalRole, "i") } }, // Case-insensitive match for professional role
-        { skills: { $in: skills } }, // Match any of the provided skills
+        { skills: { $in: skillsArray } }, // Match any of the provided skills
       ],
     }).select("-password"); // Exclude password field from the results
 
