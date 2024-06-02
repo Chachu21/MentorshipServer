@@ -2,16 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
-import axios from "axios";
 import createDatabase from "./config/dbConfig.js";
 import userRouter from "./routes/userRoute.js";
 import chatRouter from "./routes/chatRoute.js";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-
 import commetRouter from "./routes/commentRoutes.js";
 import recommendationRouter from "./routes/recommendationRoute.js";
 import paymentRouter from "./routes/paymentRoute.js";
@@ -22,11 +17,6 @@ import mentorshipRoute from "./routes/mentorshipRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-app.get("/", (req, res) => {
-  res.sendFile(join(__dirname, "index.html"));
-});
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -43,7 +33,6 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Serve static files
-app.use(express.static(join(__dirname)));
 
 // Define your routes here
 app.use("/api/v1/users", userRouter);
