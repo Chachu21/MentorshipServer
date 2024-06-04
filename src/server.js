@@ -12,8 +12,8 @@ import recommendationRouter from "./routes/recommendationRoute.js";
 import paymentRouter from "./routes/paymentRoute.js";
 import availablityRouter from "./routes/availablityRoute.js";
 import appointmentRouter from "./routes/appointmentRoute.js";
-
 import mentorshipRoute from "./routes/mentorshipRoute.js";
+import attendanceRoutes from "./routes/attendanceRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
@@ -45,6 +45,8 @@ app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/availablity", availablityRouter);
 app.use("/api/v1/appoint", appointmentRouter);
 app.use("/api/v1/mentorship", mentorshipRoute);
+app.use("/api/v1/attendance", attendanceRoutes);
+
 
 io.on("connection", (socket) => {
   console.log("Connected to socket.io");
