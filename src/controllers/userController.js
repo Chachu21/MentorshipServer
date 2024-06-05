@@ -52,17 +52,12 @@ export const createUser = async (req, res) => {
       fullName: name,
       phoneNumber: phone,
       password,
-      // : hashedPassword,
       email,
       agreeTerms,
       role,
       verificationCode,
       verificationCodeExpires: Date.now() + 3600000, // 1 hour
     });
-
-    // Save the new user to the database
-    const savedUser = await newUser.save();
-
     // Configure the email transport using environment variables
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -73,7 +68,6 @@ export const createUser = async (req, res) => {
         pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
       },
     });
-
     // Define email options
     const mailOptions = {
       from: "mulukendemis44@gmail.com",
@@ -81,10 +75,12 @@ export const createUser = async (req, res) => {
       subject: "Email Verification Code",
       text: `Your verification code is: ${verificationCode}`,
     };
-
     // Send the verification email
     await retryRequest(transporter.sendMail(mailOptions));
     console.log("Email sent successfully");
+    // Save the new user to the database
+    const savedUser = await newUser.save();
+
     // console.log(savedUser);
     // Respond to the client
     res.status(201).json({
@@ -94,6 +90,10 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error during user creation:", error);
+    console.log("error code", error.code);
+    if (error.code === "ESOCKET" || error.code === "ECONNREFUSED") {
+      return res.status(504).json({ error: "Your connection is unstable" });
+    }
     res.status(500).json({ error: "An error occurred while signing up" });
   }
 };
@@ -222,7 +222,6 @@ export const verifyEmail = async (req, res) => {
 };
 // for email resend
 export const resendVerificationCode = async (req, res) => {
-  console.log("email resend function");
   const { email } = req.body;
 
   try {
@@ -258,12 +257,13 @@ export const resendVerificationCode = async (req, res) => {
       text: `Your new OTP(one time code)  is: ${verificationCode}`,
     };
     // Send the verification email
-    await transporter.sendMail(mailOptions);
+    await retryRequest(transporter.sendMail(mailOptions));
     console.log("Email sent successfully");
     res
       .status(200)
       .json({ message: "Verification code resent. Please check your email." });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Server error", error });
   }
 };
@@ -593,16 +593,23 @@ export const matchMentors = async (req, res) => {
     // Ensure skills is an array
     const skillsArray = Array.isArray(skills) ? skills : [skills];
 
+    // Create a case-insensitive regular expression for professionalRole
+    const professionalRoleRegex = new RegExp(
+      professionalRole.split(" ").join("|"),
+      "i"
+    );
+
     // Query the database for mentors with the specified professional role and skills
     const mentors = await User.find({
       _id: { $ne: user_id }, // Exclude the request sender's data
       role: "mentor", // Filter mentors
       $or: [
-        { professionalRole: { $regex: new RegExp(professionalRole, "i") } }, // Case-insensitive match for professional role
+        { professionalRole: professionalRoleRegex }, // Case-insensitive match for professional role using regex
         { skills: { $in: skillsArray } }, // Match any of the provided skills
       ],
     }).select("-password"); // Exclude password field from the results
 
+    console.log(mentors);
     res.status(200).json({ mentors }); // Return matching mentors
   } catch (error) {
     console.error("Error matching mentors:", error);
@@ -610,136 +617,54 @@ export const matchMentors = async (req, res) => {
   }
 };
 
-// Function to send password reset email
-// const sendPasswordResetEmail = async (email, token) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       host: "smtp.gmail.com",
-//       port: 465,
-//       secure: true, // Use SSL/TLS
-//       auth: {
-//         user: "chilotnathnael@gmail.com",
-//         pass: "wwgl ktvw dfmn cmwg", // Use your Gmail app password or account password
-//       },
-//     });
+//search user using name and role
+export const searchBasedNameAndRole = async (req, res) => {
+  try {
+    const { name, role } = req.query;
 
-//     const mailOptions = {
-//       from: "chilotnathnael@gmail.com",
-//       to: email,
-//       subject: "Password reset",
-//       // html: `<p>You have requested a password reset. Please follow <a href="${resetPasswordURL}">this link</a> to reset your password. This link will expire in 1 hour.</p>`,
-//       html: `<p>You have requested a password reset. Please follow <a href="http://localhost:5173/resetPassword/${token}">this link</a> to reset your password. This link will expire in 1 hour.</p>`,
-//     };
+    // Constructing the query object based on provided parameters
+    const query = {};
+    if (name) query.fullName = { $regex: new RegExp(name, "i") }; // Case-insensitive search by name
+    if (role) query.role = role;
 
-//     await transporter.sendMail(mailOptions);
-//     console.log("Password reset email sent successfully");
-//   } catch (error) {
-//     console.error("Error sending password reset email:", error);
-//     throw error;
-//   }
-// };
+    // Executing the search query
+    const users = await User.find(query);
 
-// // Endpoint to initiate password reset
-// export const forgotPassword = async (req, res) => {
-//   const { email } = req.body;
-//   try {
-//     // Find user by email
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
+    if (users.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found with the given criteria." });
+    }
 
-//     // Generate a unique token
-//     const token = crypto.randomBytes(20).toString("hex");
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
-//     // Set token expiration time (1 hour)
-//     user.resetPasswordToken = token;
-//     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+//get mentor by name,or professionalrole, or skills
 
-//     // Save user with token
-//     await user.save();
+export const searchMentors = async (req, res) => {
+  try {
+    const { query } = req.query; // Get the search query from request parameters
 
-//     // Send password reset email
-//     await sendPasswordResetEmail(email, token);
+    // Constructing the query object based on provided search query
+    const searchCriteria = {
+      role: "mentor",
+      $or: [
+        { fullName: { $regex: new RegExp(query, "i") } }, // Search by name
+        { professionalRole: { $regex: new RegExp(query, "i") } }, // Search by professional role
+        { skills: { $in: [new RegExp(query, "i")] } }, // Search by skills using $in operator
+      ],
+    };
 
-//     // Send success response
-//     return res
-//       .status(200)
-//       .json({ message: "Password reset email sent successfully" });
-//   } catch (error) {
-//     console.error("Error occurred while processing password reset:", error);
-//     return res.status(error.statusCode || 500).json({
-//       error:
-//         error.message || "An error occurred while processing password reset",
-//     });
-//   }
-// };
+    // Executing the search query
+    const users = await User.find(searchCriteria);
 
-// // Endpoint to reset password
-// export const resetPassword = async (req, res) => {
-//   const { token } = req.params;
-//   const { password } = req.body;
-
-//   try {
-//     // Find user by reset token
-//     const user = await User.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() },
-//     });
-
-//     if (!user) {
-//       return res.status(400).json({ error: "Invalid or expired token" });
-//     }
-
-//     // // Hash the new password
-//     // const hashedPassword = await bcrypt.hash(password, 10);
-
-//     // // Update user's password and clear reset token fields
-//     user.password = password;
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-
-//     // Save updated user
-//     await user.save();
-
-//     // Send success response
-//     return res.status(200).json({ message: "Password reset successfully" });
-//   } catch (error) {
-//     console.error("Error occurred while resetting password:", error);
-//     return res
-//       .status(500)
-//       .json({ error: "An error occurred while resetting password" });
-//   }
-// };
-
-// // Route to handle the reset password link
-// export const getResetPassword = async (req, res) => {
-//   const { token } = req.params;
-
-//   try {
-//     // Find user by reset token
-//     const user = await User.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() },
-//     });
-
-//     if (!user) {
-//       return res.status(400).json({ error: "Invalid or expired token" });
-//     }
-
-//     // Render a form for the user to reset their password
-//     // Here you can redirect the user to a password reset page or render a form
-//     // For example:
-//     // res.render('reset-password-form', { token }); // You need to create a reset-password-form.ejs file or use your preferred templating engine
-//     // Or you can redirect to a frontend route to handle the password reset process
-
-//     res.status(200).json({ message: "Redirect user to password reset page" }); // Adjust the response according to your frontend handling
-//   } catch (error) {
-//     console.error("Error occurred while handling password reset link:", error);
-//     return res
-//       .status(500)
-//       .json({ error: "An error occurred while handling password reset link" });
-//   }
-// };
-
-//
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

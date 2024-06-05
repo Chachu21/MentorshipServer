@@ -20,6 +20,8 @@ import {
   findUserByEmail,
   updateUser,
   matchMentors,
+  searchBasedNameAndRole,
+  searchMentors,
 } from "../controllers/userController.js";
 const userRouter = express.Router();
 
@@ -34,7 +36,8 @@ userRouter.get("/mentor/:id", getMentorById);
 userRouter.get("/mentee/:id", getMenteeById);
 userRouter.get("/mentors/expertise/:expertise", getMentorsByExpertise);
 userRouter.get("/mentors/high-rating", getMentorsWithHighRating);
-
+userRouter.get("/search/user", searchBasedNameAndRole);
+userRouter.get("/search/mentors", searchMentors);
 userRouter.get("/get/:id", getUserById);
 userRouter.get("/get/:email", findUserByEmail);
 userRouter.get("/mentor/match/:id", matchMentors);

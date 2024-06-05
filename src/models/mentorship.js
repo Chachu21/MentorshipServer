@@ -2,10 +2,8 @@ import mongoose from "mongoose";
 
 const mentorshipSchema = new mongoose.Schema(
   {
-    skill: {
-      type: String,
-      required: true,
-    },
+    title: { type: String, required: true },
+    skills: [{ type: String, required: true }],
     description: {
       type: String,
       required: true,
@@ -20,6 +18,12 @@ const mentorshipSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    mentees: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );

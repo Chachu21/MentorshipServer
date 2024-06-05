@@ -3,15 +3,9 @@ import mongoose from "mongoose";
 //create a schema for comments
 const commentSchema = new mongoose.Schema(
   {
-    //create a comment field
-    fullName: {
-      type: String,
-      required: true,
-      trim: true, // Remove leading/trailing whitespace
-    },
-    email: {
-      type: String,
-      required: true,
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     rating: {
       type: Number,
