@@ -465,8 +465,10 @@ export const getUsers = async (req, res) => {
 // Get User by ID
 export const getUserById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id;
+    console.log(",mentorId", id);
     const user = await User.findById(id);
+    console.log(user);
     if (!user) {
       return res.status(404).json({ error: "User not found " });
     }

@@ -9,7 +9,6 @@ const mentorshipSchema = new mongoose.Schema(
       required: true,
     },
     goal: { type: String, required: true },
-    benefit: { type: String, required: true },
     service: { type: String, required: true },
     amount: { type: Number, required: true },
     duration: { type: String, required: true },

@@ -46,9 +46,7 @@ userRouter.post("/forgotpassword", forgotPassword);
 userRouter.post("/verify-email", verifyEmail);
 userRouter.post("/resend-verification-code", resendVerificationCode);
 userRouter.post("/resetPassword/:token", resetPassword);
-
 userRouter.get("resetPassword/:token", getResetPassword);
-
 userRouter.post("/forgotpassword", forgotPassword);
 userRouter.post(
   "/resetPassword/:token",

@@ -5,7 +5,7 @@ export const createMentorship = async (req, res) => {
   try {
     const {
       title,
-      skill,
+      skills,
       description,
       goal,
       benefit,
@@ -16,7 +16,7 @@ export const createMentorship = async (req, res) => {
     const createdBy = req.user;
     const mentorship = new Mentorship({
       title,
-      skill,
+      skills,
       description,
       goal,
       benefit,
@@ -139,7 +139,7 @@ export const searchMentorshipsBySkillsAndRoles = async (req, res) => {
 export const getBestMatchingMentorships = async (req, res) => {
   try {
     const user_id = req.params.id;
-    console.log(user_id);
+    console.log("from mentorship matching", user_id);
     // Check if the user already exists
     const user = await User.findById(user_id);
     if (!user) {
@@ -147,6 +147,7 @@ export const getBestMatchingMentorships = async (req, res) => {
     }
 
     const { professionalRole, skills } = user;
+    console.log("skills", skills);
 
     // Ensure skills is an array
     const skillsArray = Array.isArray(skills) ? skills : [skills];
@@ -160,13 +161,13 @@ export const getBestMatchingMentorships = async (req, res) => {
     const query = {
       $or: [
         { professionalRole: professionalRoleRegex }, // Case-insensitive match for professional role using regex
-        { skill: { $in: skillsArray } }, // Match any of the provided skills
+        { skills: { $in: skillsArray } }, // Match any of the provided skills
         // { goal: { $in: goalregex } },
       ],
     };
     console.log(query);
     // Executing the search query and sorting by relevance or any other criteria
-    const mentorships = await Mentorship.find(query);
+    const mentorships = await Mentorship.find(query).populate("createdBy");
     res.status(200).json(mentorships);
   } catch (error) {
     console.error("Error getting best matching mentorships:", error);
