@@ -16,7 +16,7 @@ export const verifyToken = async (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: err.message, status: err.status });
     }
-
+    // console.log(decoded.userId);
     req.user = decoded.userId;
     next();
   });

@@ -35,7 +35,7 @@ export const createUser = async (req, res) => {
       $or: [{ phoneNumber: phone }, { email }],
     });
     if (existingUser) {
-      console.log(existingUser.phoneNumber, existingUser.email);
+      // console.log(existingUser.phoneNumber, existingUser.email);
       return res.status(400).json({
         error: "User with this phone number or email already exists",
       });
@@ -319,11 +319,7 @@ export const loginController = async function (req, res) {
 //TODO
 // emails, token;
 
-const sendPasswordResetEmail = async () => {
-  //TODO
-  //this is example for testing emails
-  const emails = ["amsaledemismuller@gmail.com", "amsalelij@gmail.com"];
-
+const sendPasswordResetEmail = async (email, token) => {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -337,12 +333,12 @@ const sendPasswordResetEmail = async () => {
 
     const mailOptions = {
       from: "mulukendemis44@gmail.com",
-      to: emails.join(","), // Join the array of emails into a comma-separated string
+      to: email,
       subject: "Password reset",
-      html: `<p>You have requested a password reset. Please follow <a href="http://localhost:5173/resetPassword/">this link</a> to reset your password. This link will expire in 1 hour.</p>`, // Close the href attribute properly
+      html: `<p>You have requested a password reset. Please follow <a href="http://localhost:3000/resetpassword/${token}">this link</a> to reset your password. This link will expire in 1 hour.</p>`, // Close the href attribute properly
     };
 
-    await transporter.sendMail(mailOptions);
+    await retryRequest(transporter.sendMail(mailOptions));
     console.log("Password reset emails sent successfully");
   } catch (error) {
     console.error("Error sending password reset emails:", error);
@@ -466,9 +462,9 @@ export const getUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const id = req.params.id;
-    console.log(",mentorId", id);
+    // console.log(",mentorId", id);
     const user = await User.findById(id);
-    console.log(user);
+    // console.log(user);
     if (!user) {
       return res.status(404).json({ error: "User not found " });
     }
@@ -481,7 +477,7 @@ export const getUserById = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    console.log(userId);
+    // console.log(userId);
     const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ error: "User not found" });
@@ -498,7 +494,7 @@ export const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const { updates } = req.body;
-    console.log("updates", updates);
+    // console.log("updates", updates);
     const updateData = {};
     // Check if user exists
     const user = await User.findById(userId);
@@ -611,7 +607,7 @@ export const matchMentors = async (req, res) => {
       ],
     }).select("-password"); // Exclude password field from the results
 
-    console.log(mentors);
+    // console.log(mentors);
     res.status(200).json({ mentors }); // Return matching mentors
   } catch (error) {
     console.error("Error matching mentors:", error);
