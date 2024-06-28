@@ -13,9 +13,14 @@ const proposalSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  mentorship_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Mentorship",
+    required: true,
+  },
   status: {
     type: String,
-    enum: ["pending", "accepted", "rejected"],
+    enum: ["pending", "accepted", "rejected", "completed"],
     default: "pending",
   },
   createdAt: {
