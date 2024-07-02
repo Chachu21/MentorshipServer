@@ -6,14 +6,12 @@ import {
   loginController,
   getResetPassword,
   forgotPassword,
-  //   // logoutController,
   resetPassword,
   getMentorsByService,
   getAllMentors,
   getAllMentees,
   getMentorById,
   getMenteeById,
-  getMentorsByExpertise,
   getMentorsWithHighRating,
   verifyEmail,
   resendVerificationCode,
@@ -22,6 +20,8 @@ import {
   matchMentors,
   searchBasedNameAndRole,
   searchMentors,
+  getMentorsByCategory,
+  getMentorsBySkill,
 } from "../controllers/userController.js";
 const userRouter = express.Router();
 
@@ -34,10 +34,11 @@ userRouter.get("/getallmentors", getAllMentors);
 userRouter.get("/getallmentees", getAllMentees);
 userRouter.get("/mentor/:id", getMentorById);
 userRouter.get("/mentee/:id", getMenteeById);
-userRouter.get("/mentors/expertise/:expertise", getMentorsByExpertise);
+userRouter.get("/mentors/skill", getMentorsBySkill);
 userRouter.get("/mentors/high-rating", getMentorsWithHighRating);
 userRouter.get("/search/user", searchBasedNameAndRole);
 userRouter.get("/search/mentors", searchMentors);
+userRouter.get("/get/bycategory", getMentorsByCategory);
 userRouter.get("/get/:id", getUserById);
 userRouter.get("/get/:email", findUserByEmail);
 userRouter.get("/mentor/match/:id", matchMentors);

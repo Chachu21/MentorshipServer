@@ -29,6 +29,8 @@ async function retryRequest(requestPromise, retryCount = 0) {
 
 export const createUser = async (req, res) => {
   const { name, phone, password, email, agreeTerms, role } = req.body;
+
+  console.log(req.body);
   try {
     // Check if the user with the same phone number or email already exists
     const existingUser = await User.findOne({
@@ -108,6 +110,18 @@ export const getAllMentors = async (req, res) => {
   }
 };
 
+// Get all mentors by role and optionally by category
+export const getMentorsByCategory = async (req, res) => {
+  const { category } = req.query;
+  try {
+    const mentors = await User.find({ category, role: "mentor" });
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+    console.log(error.message);
+  }
+};
+
 // Get all mentees
 export const getAllMentees = async (req, res) => {
   try {
@@ -145,22 +159,31 @@ export const getMenteeById = async (req, res) => {
 };
 
 // Get mentors by expertise
-export const getMentorsByExpertise = async (req, res) => {
+export const getMentorsBySkill = async (req, res) => {
   try {
+    const skill = req.query.skill;
+
+    if (!skill) {
+      return res.status(400).json({ error: "Skill parameter is required" });
+    }
+
     const mentors = await User.find({
       role: "mentor",
-      expertise: req.params.expertise,
+      skills: skill,
     });
+
     if (mentors.length === 0) {
       return res
         .status(404)
-        .json({ error: "No mentors found with the specified expertise" });
+        .json({ error: `No mentors found with the skill: ${skill}` });
     }
+
     res.status(200).json(mentors);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get mentors with high rating
 export const getMentorsWithHighRating = async (req, res) => {
@@ -488,12 +511,11 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-//for testing purposes
-//TODO
 export const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const { updates } = req.body;
+
     // console.log("updates", updates);
     const updateData = {};
     // Check if user exists
@@ -541,6 +563,7 @@ export const updateUser = async (req, res) => {
 };
 //if it is not working , please remove retryrequest method
 const uploadImageToCloudinary = async (imageData) => {
+  // console.log(imageData)
   try {
     const result = await retryRequest(
       cloudinary.uploader.upload(imageData, {

@@ -99,6 +99,9 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+      category: {
+      type: String,
+    },
     rate: {
       type: Number,
     },
