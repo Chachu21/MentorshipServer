@@ -15,6 +15,7 @@ import appointmentRouter from "./routes/appointmentRoute.js";
 import mentorshipRoute from "./routes/mentorshipRoute.js";
 import attendanceRoutes from "./routes/attendanceRoute.js";
 import contractRoute from "./routes/contractRoute.js";
+import proposalRouter from "./routes/proposalRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
@@ -48,6 +49,7 @@ app.use("/api/v1/appoint", appointmentRouter);
 app.use("/api/v1/mentorship", mentorshipRoute);
 app.use("/api/v1/attendance", attendanceRoutes);
 app.use("/api/v1/contract", contractRoute);
+app.use("/api/v1/proposal", proposalRouter);
 
 io.on("connection", (socket) => {
   console.log("Connected to socket.io");

@@ -31,12 +31,13 @@ async function retryRequest(requestPromise, retryCount = 0) {
 const CHAPA_AUTH_KEY = process.env.CHAPA_AUTH_KEY; //Put Your Chapa Secret Key
 
 const acceptPayment = async (req, res) => {
-  const { amount, currency, email, fullName, phoneNumber } = req.body;
+  const userId = req.user;
+  const { amount, currency, email, first_name, last_name, phone_number } =
+    req.body;
   console.log(req.body);
-  const TEXT_REF = `${fullName}${Date.now()}`;
+  const TEXT_REF = `${first_name}${Date.now()}`;
   //const CALLBACK_URL = `https://api.chapa.co/v1/payment/verify-payment/${TEXT_REF}`;
-  const CALLBACK_URL = `http://localhost:3000/api/v1/payment/verify-payment/${TEXT_REF}`;
-
+  const CALLBACK_URL = `http://localhost:5000/api/v1/payment/verify-payment/${TEXT_REF}/${userId}`;
   try {
     const config = {
       headers: {
@@ -49,17 +50,16 @@ const acceptPayment = async (req, res) => {
       amount,
       currency,
       email,
-      fullName,
-      phoneNumber,
+      first_name: first_name,
+      last_name: last_name,
+      phone_number: phone_number,
       tx_ref: TEXT_REF,
-      return_url: "https://www.google.com/",
+      return_url: "http://localhost:3000/menteedashboard/settings/get-paid",
       callback_url: CALLBACK_URL,
     };
-
     const response = await retryRequest(
       axios.post("https://api.chapa.co/v1/transaction/initialize", body, config)
     );
-
     res.status(200).json(response.data);
   } catch (error) {
     if (error.response) {
@@ -72,6 +72,7 @@ const acceptPayment = async (req, res) => {
         });
       } else if (error.response.status === 401) {
         // Unauthorized error
+        console.log(error);
         return res.status(401).json({
           error: "Unauthorized",
           message: "Authentication failed. Please check your credentials.",
@@ -100,78 +101,9 @@ const acceptPayment = async (req, res) => {
   }
 };
 
-// const acceptPayment = async (req, res) => {
-//   const {
-//     amount,
-//     currency,
-//     email,
-//     fullName,
-//     phoneNumber,
-    
-//   } = req.body;
-//   console.log("request body", req.body);
-
-//    const TEXT_REF = `${fullName}${Date.now()}`;
- 
-
-  
-//   console.log("text reference", TEXT_REF);
-//   const CALLBACK_URL = `https://api.chapa.co/v1/transaction/verify/${TEXT_REF}`;
-
-//   try {
- 
-//     const config = {
-//       headers: {
-//         Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
-//         "Content-Type": "application/json",
-//       },
-//     };
-
-//     const body = {
-//       amount: amount,
-//       currency: currency,
-//       email: email,
-//       fullName: fullName,
-//       phoneNumber: phoneNumber,
-//       tx_ref: TEXT_REF,
-//       return_url: "https://www.google.com/",
-//       callback_url: CALLBACK_URL,
-//     };
-//     let resp = "";
-//     await retryRequest(
-//       axios.post("https://api.chapa.co/v1/transaction/initialize", body, config)
-//     )
-//       .then((response) => {
-//         resp = response;
-//         // console.log("something happen ", response);
-//       })
-//       .catch((error) => {
-//         console.log("error is :::", error);
-//         console.log("respons data", error.response); // Prints the error response data
-//         console.log("respons status", error.response); // Prints the status code of the error response
-//         console.log("respons header", error.response); // Prints the headers of the error response
-//         res.status(400).json({
-//           message: error,
-//           text: "error from catch with 400",
-//         });
-//       });
-//     res.status(200).json(resp);
-//   } catch (e) {
-//     // res.status(400).json({
-//     //   error_code: e.code,
-//     //   message: e.message,
-//     // });
-//   }
-// };
-
-
-
-
-
-
 const verifyPayment = async (req, res) => {
-  console.log("I am inside verify payment");
-  //   const { id: tx_ref, groupId: group_id, userId: user_id, round } = req.params;
+  const tx_ref = req.params.id;
+  const user_id = req.params.userId;
 
   // Request header with Chapa secret key
   const config = {
@@ -182,7 +114,6 @@ const verifyPayment = async (req, res) => {
 
   // Verify the transaction
   try {
-    
     const responseFromChapa = await retryRequest(
       axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, config)
     );
@@ -197,25 +128,35 @@ const verifyPayment = async (req, res) => {
       tx_ref: chapaData.tx_ref,
       email: chapaData.email,
       phoneNumber: chapaData.phoneNumber,
-      fullName: chapaData.fullName,
+      fullName: chapaData.first_name + " " + chapaData.last_name,
       amount: chapaData.amount,
       currency: chapaData.currency,
       reference: chapaData.reference,
       status: chapaData.status,
+      user: user_id,
       verified_at: new Date(), // Add verified_at field with current date/time
     });
 
     // Save the transaction
     const savedPayment = await payment.save();
-    res.json(savedPayment);
+
+    // Find the user by email
+    const user = await User.findById(user_id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update the user's remaining balance
+    user.remainingBalance += chapaData.amount;
+    await user.save();
+
+    res.json({ payment: savedPayment, user });
   } catch (error) {
     console.log("error from catch", error);
     res.status(500).json({ error: "Failed to verify and save payment" });
   }
 };
-
-
-
 const transferPayment = async (req, res) => {
   const userId = req.params.userId; // Extract userId from request parameters
   const {
@@ -287,15 +228,13 @@ const transferPayment = async (req, res) => {
   }
 };
 
-
-
 // Get all transfers
 const getAllTransfers = async (req, res) => {
   try {
-    const response = await axios.get('https://api.chapa.co/v1/transfers', {
+    const response = await axios.get("https://api.chapa.co/v1/transfers", {
       headers: {
         Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -318,12 +257,15 @@ const getTransferByReference = async (req, res) => {
   const { reference } = req.params;
 
   try {
-    const response = await axios.get(`https://api.chapa.co/v1/transfers/${reference}`, {
-      headers: {
-        Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await axios.get(
+      `https://api.chapa.co/v1/transfers/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     console.log("Transfer fetched successfully:", response.data);
     res.status(200).json({
@@ -338,7 +280,6 @@ const getTransferByReference = async (req, res) => {
     });
   }
 };
-
 
 // const verifyPayment = async (req, res) => {
 //   console.log("am inside verify payment");

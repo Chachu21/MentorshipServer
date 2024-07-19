@@ -18,9 +18,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
-    interests: {
-      type: String,
-    },
     location: {
       state: { type: String },
       city: { type: String },
@@ -67,7 +64,7 @@ const userSchema = new mongoose.Schema(
     ],
     role: {
       type: String,
-      enum: ["mentor", "mentee"],
+      enum: ["mentor", "mentee", "admin"],
     },
 
     bio: {
@@ -99,24 +96,18 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
-      category: {
+    category: {
       type: String,
     },
     rate: {
       type: Number,
     },
-    mentoringFee: {
-      type: Number,
-    },
     //added for mentor remainingBalance for payment transafer calculations
     remainingBalance: {
       type: Number,
+      default: 0,
     },
 
-    service: {
-      type: String,
-      default: "Free",
-    },
     resetPasswordToken: {
       type: String,
     },
@@ -147,10 +138,9 @@ userSchema.methods.comparePassword = async function (
 userSchema.pre("save", function (next) {
   if (this.role !== "mentor") {
     this.is_approved = undefined; // Remove field if not mentor
-    this.service = undefined;
     this.experiences = undefined;
-    this.mentoringFee = undefined;
-    this.bank_account = undefined;
+    this.level = undefined;
+    this.goal = undefined;
   }
   next();
 });

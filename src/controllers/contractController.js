@@ -1,9 +1,23 @@
 import Contract from "../models/contract.js";
-
+import User from "../models/users.js";
 // Create a new contract
 export const createContract = async (req, res) => {
+  const mentor_id = req.user;
+
+  const { mentee_id, isAgree, mentorship_id } = req.body;
   try {
-    const newContract = new Contract(req.body);
+    const user = await User.findById(mentor_id);
+    //check user is exit or not exist
+    if (!user) {
+      res.status(404).json({ error: "user is not found" });
+    }
+
+    const newContract = new Contract({
+      mentor_id: mentor_id,
+      mentee_id,
+      mentorship_id,
+      isAgree,
+    });
     const savedContract = await newContract.save();
     res.status(201).json(savedContract);
   } catch (error) {
@@ -40,6 +54,39 @@ export const getContractById = async (req, res) => {
   }
 };
 
+//get all contract by mentor_id
+
+export const getByMentorId = async (req, res) => {
+  const mentor_id = req.user;
+  try {
+    //check the mentor is exit or not
+    const user = await User.findById(mentor_id);
+    if (!user) {
+      res.status(404).json({ error: "user not found" });
+    }
+    const contract = await Contract.find({ mentor_id: mentor_id });
+    if (!contract) {
+      res.status(404).json({ error: "contract not found" });
+    }
+    res.status(200).json(contract);
+  } catch (error) {}
+};
+
+export const getByMenteeId = async (req, res) => {
+  const mentee_id = req.user;
+  try {
+    //check the mentor is exit or not
+    const user = await User.findById(mentee_id);
+    if (!user) {
+      res.status(404).json({ error: "user not found" });
+    }
+    const contract = await Contract.find({ mentee_id: mentee_id });
+    if (!contract) {
+      res.status(404).json({ error: "contract not found" });
+    }
+    res.status(200).json(contract);
+  } catch (error) {}
+};
 // Update a contract by ID
 export const updateContract = async (req, res) => {
   try {

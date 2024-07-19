@@ -1,11 +1,16 @@
 import mongoose from "mongoose";
 const proposalSchema = new mongoose.Schema({
   title: {
-    type: string,
+    type: String,
     required: true,
   },
   description: {
     type: String,
+    required: true,
+  },
+  mentor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
   author: {

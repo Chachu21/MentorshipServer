@@ -22,10 +22,6 @@ const contractSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    agreementStatement: {
-      // Fixed typo here
-      type: String,
-    },
   },
   { timestamps: true }
 );

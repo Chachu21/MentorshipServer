@@ -1,28 +1,4 @@
 import mongoose from "mongoose";
-const agreementSchema = new mongoose.Schema(
-  {
-    mentee: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    mentor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    termsAccepted: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    signedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { timestamps: true }
-);
 
 const mentorshipSchema = new mongoose.Schema(
   {
@@ -34,6 +10,7 @@ const mentorshipSchema = new mongoose.Schema(
     },
     goal: { type: String, required: true },
     service: { type: String, required: true },
+    YourPayment: { type: Number },
     amount: { type: Number, required: true },
     duration: { type: String, required: true },
     createdBy: {
@@ -50,7 +27,6 @@ const mentorshipSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    contracts: [agreementSchema],
   },
   { timestamps: true }
 );
