@@ -6,26 +6,27 @@ import {
   loginController,
   getResetPassword,
   forgotPassword,
-  //   // logoutController,
   resetPassword,
   getMentorsByService,
   getAllMentors,
   getAllMentees,
   getMentorById,
   getMenteeById,
-  getMentorsByExpertise,
   getMentorsWithHighRating,
   verifyEmail,
   resendVerificationCode,
   findUserByEmail,
   updateUser,
   matchMentors,
-  getMenteesOfSpecificMentor,
+  searchBasedNameAndRole,
+  searchMentors,
+  getMentorsByCategory,
+  getMentorsBySkill,
 } from "../controllers/userController.js";
 const userRouter = express.Router();
 
 userRouter.get("resetPassword/:token", getResetPassword);
-userRouter.get("/", getUsers);
+userRouter.get("/get", getUsers);
 userRouter.post("/login", loginController);
 userRouter.put("/update/:id", updateUser);
 userRouter.get("/mentors", getMentorsByService);
@@ -33,9 +34,11 @@ userRouter.get("/getallmentors", getAllMentors);
 userRouter.get("/getallmentees", getAllMentees);
 userRouter.get("/mentor/:id", getMentorById);
 userRouter.get("/mentee/:id", getMenteeById);
-userRouter.get("/mentors/expertise/:expertise", getMentorsByExpertise);
+userRouter.get("/mentors/skill", getMentorsBySkill);
 userRouter.get("/mentors/high-rating", getMentorsWithHighRating);
-
+userRouter.get("/search/user", searchBasedNameAndRole);
+userRouter.get("/search/mentors", searchMentors);
+userRouter.get("/get/bycategory", getMentorsByCategory);
 userRouter.get("/get/:id", getUserById);
 userRouter.get("/get/:email", findUserByEmail);
 userRouter.get("/mentor/match/:id", matchMentors);
@@ -45,9 +48,7 @@ userRouter.post("/forgotpassword", forgotPassword);
 userRouter.post("/verify-email", verifyEmail);
 userRouter.post("/resend-verification-code", resendVerificationCode);
 userRouter.post("/resetPassword/:token", resetPassword);
-
 userRouter.get("resetPassword/:token", getResetPassword);
-
 userRouter.post("/forgotpassword", forgotPassword);
 userRouter.post(
   "/resetPassword/:token",

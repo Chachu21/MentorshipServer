@@ -10,10 +10,11 @@ import {
 // import { verifyToken } from "../midleware/jwtMiddleware.js";
 
 import express from "express";
+import { verifyToken } from "../middlewares/jwtMiddleware.js";
 const paymentRouter = express.Router();
 
-paymentRouter.post("/accept-payment", acceptPayment);
-paymentRouter.get("/verify-payment", verifyPayment);
+paymentRouter.post("/accept-payment", verifyToken, acceptPayment);
+paymentRouter.get("/verify-payment/:id/:userId", verifyPayment);
 paymentRouter.get("/get", getAllPayments);
 paymentRouter.get("/get/:userId", getAllPaymentsByUserId);
 paymentRouter.post("/initiate-transfer", transferPayment);

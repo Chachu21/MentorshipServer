@@ -18,9 +18,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
-    interests: {
-      type: String,
-    },
     location: {
       state: { type: String },
       city: { type: String },
@@ -34,12 +31,10 @@ const userSchema = new mongoose.Schema(
     },
     level: {
       type: String,
-      enum: ["beginner", "intermediate", "advanced"],
-      default: "beginner",
     },
     profileImage: {
-      public_id: { type: String, default: Date.now() },
-      url: { type: String, default: Date.now() },
+      public_id: { type: String },
+      url: { type: String },
     },
     is_approved: {
       type: Boolean,
@@ -54,48 +49,32 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpires: {
       type: Date,
     },
-    language: {
+    languages: {
       type: [String],
       default: ["English"],
     },
-    skill: {
+    skills: {
       type: [String],
     },
-    preferedExperianceLevel: {
-      type: String,
-      enum: ["beginner", "intermediate", "advanced"],
-      default: "beginner",
-    },
-    role: {
-      type: String,
-      enum: ["mentor", "mentee"],
-      default: "mentee",
-    },
-    //collection of mentee in mentorship programs when confirmed by mentor will pushed to this array
-    mentees: [
+    mentorships: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Mentorship",
       },
     ],
+    role: {
+      type: String,
+      enum: ["mentor", "mentee", "admin"],
+    },
+
     bio: {
       type: String,
     },
     goal: {
       type: String,
     },
-    // professional role
     professionalRole: {
       type: String,
-    },
-    // currentJob: {
-    //   type: String,
-    // },
-    educationalBackground: {
-      school: { type: String },
-      degree: { type: String },
-      fieldOfStudy: { type: String },
-      description: { type: String },
     },
     experiences: [
       {
@@ -112,26 +91,24 @@ const userSchema = new mongoose.Schema(
         degree: { type: String },
         field: { type: String },
         educationDescription: { type: String },
+        certification: {
+          type: String,
+        },
       },
     ],
-    certification: {
+    category: {
       type: String,
     },
     rate: {
       type: Number,
-    },
-    mentoringFee: {
-      type: Number,
+      default: 0,
     },
     //added for mentor remainingBalance for payment transafer calculations
     remainingBalance: {
       type: Number,
+      default: 0,
     },
 
-    service: {
-      type: String,
-      default: "Free",
-    },
     resetPasswordToken: {
       type: String,
     },
@@ -139,8 +116,8 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
     isVerified: { type: Boolean, default: false },
-    verificationCode: String,
-    verificationCodeExpires: Date,
+    verificationCode: { type: String },
+    verificationCodeExpires: { type: Date },
   },
   { timestamps: true }
 );
@@ -162,14 +139,9 @@ userSchema.methods.comparePassword = async function (
 userSchema.pre("save", function (next) {
   if (this.role !== "mentor") {
     this.is_approved = undefined; // Remove field if not mentor
-    this.service = undefined;
-    this.expertise = undefined;
-    this.experience = undefined;
-    this.mentoringFee = undefined;
-    this.rate = undefined;
-    this.currentJob = undefined;
-    this.preferedExperianceLevel = undefined;
-    this.bank_account = undefined;
+    this.experiences = undefined;
+    this.level = undefined;
+    this.goal = undefined;
   }
   next();
 });

@@ -1,18 +1,42 @@
 import Comment from "../models/comment.js";
+import User from "../models/users.js";
 
 //create a new comment
 
 export const createComment = async (req, res) => {
-  const newComment = new Comment({
-    fullName: req.body.fullName,
-    email: req.body.email,
-    rating: req.body.rating,
-    comment: req.body.comment,
-  });
-  newComment.save();
-  res.status(200).json(newComment);
-};
+  const user = req.user;
+  try {
+    // Create a new comment
+    const newComment = new Comment({
+      user,
+      mentor: req.body.mentor,
+      rating: req.body.values.rating,
+      comment: req.body.values.comment,
+    });
 
+    // Save the comment
+    await newComment.save();
+
+    // Update the mentor's rating
+    const mentorId = req.body.mentor;
+    const comments = await Comment.find({ mentor: mentorId });
+    const averageRating = comments.length
+      ? (
+          comments.reduce((sum, comment) => sum + comment.rating, 0) /
+          comments.length
+        ).toFixed(2)
+      : "0.00";
+
+    // Update the mentor's rating in the User model
+    await User.findByIdAndUpdate(mentorId, { rate: parseFloat(averageRating) });
+
+    // Respond with the created comment
+    res.status(200).json(newComment);
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 // Get all comments
 export const getComments = async (req, res) => {
   const comments = await Comment.find();

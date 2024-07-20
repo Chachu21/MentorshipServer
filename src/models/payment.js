@@ -22,7 +22,7 @@ const paymentSchema = new mongoose.Schema({
   },
   currency: {
     type: String,
-    required: true,
+    default: "ETB",
   },
   status: {
     type: String,
@@ -33,20 +33,20 @@ const paymentSchema = new mongoose.Schema({
     required: true,
   },
 
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   verified_at: {
     type: Date,
     required: true,
   },
-  paymentResponse: {
-    // Payment verification response
-    status: {
-      type: String,
-      enum: ["pending", "verified", "failed"],
-      default: "pending",
-    },
-   
-    // You can add more fields here like transaction ID, timestamps, etc.
-  },
+  // mentorship: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: "Mentorship",
+  //   required: true,
+  // },
   // You can add more fields as needed
 });
 
