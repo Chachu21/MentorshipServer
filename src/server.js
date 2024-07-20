@@ -14,6 +14,7 @@ import availablityRouter from "./routes/availablityRoute.js";
 import appointmentRouter from "./routes/appointmentRoute.js";
 
 import mentorshipRoute from "./routes/mentorshipRoute.js";
+import messageRouter from "./routes/messageRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.get("/", (req, res) => {
 // Define your routes here
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/chats", chatRouter);
+app.use("/api/v1/messages", messageRouter);
 app.use("/api/v1/comment", commetRouter);
 app.use("/api/v1/recommend", recommendationRouter);
 app.use("/api/v1/payment", paymentRouter);
@@ -53,28 +55,35 @@ io.on("connection", (socket) => {
     socket.emit("connected");
   });
 
-  socket.on("join chat", (room) => {
-    socket.join(room);
-    console.log("User Joined Room: " + room);
+  socket.on("join chat", (chatId) => {
+    socket.join(chatId);
+    console.log("User Joined Room: " + chatId);
   });
   socket.on("typing", (room) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
-  socket.on("new message", (newMessageRecieved) => {
-    var chat = newMessageRecieved.chat;
+  socket.on("sendMessage", async (data) => {
+    const { chatId, message, senderId } = data;
 
-    if (!chat.users) return console.log("chat.users not defined");
-
-    chat.users.forEach((user) => {
-      if (user._id == newMessageRecieved.sender._id) return;
-
-      socket.in(user._id).emit("message recieved", newMessageRecieved);
+    let msg = await Message.create({ sender: senderId, message, chatId });
+    msg = await msg.populate("sender", "name email profilePic").execPopulate();
+    msg = await msg
+      .populate({
+        path: "chatId",
+        select: "chatName isGroup users",
+        model: "Chat",
+        populate: {
+          path: "users",
+          select: "name email profilePic",
+          model: "User",
+        },
+      })
+      .execPopulate();
+    await Chat.findByIdAndUpdate(chatId, {
+      latestMessage: msg,
     });
-  });
 
-  socket.off("setup", () => {
-    console.log("USER DISCONNECTED");
-    socket.leave(userData._id);
+    io.to(chatId).emit("messageReceived", msg);
   });
 });
 

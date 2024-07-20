@@ -71,7 +71,7 @@ const userSchema = new mongoose.Schema(
       enum: ["mentor", "mentee"],
       default: "mentee",
     },
-//collection of mentee in mentorship programs when confirmed by mentor will pushed to this array
+    //collection of mentee in mentorship programs when confirmed by mentor will pushed to this array
     mentees: [
       {
         type: mongoose.Schema.Types.ObjectId,
