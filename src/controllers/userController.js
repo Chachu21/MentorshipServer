@@ -184,7 +184,6 @@ export const getMentorsBySkill = async (req, res) => {
   }
 };
 
-
 // Get mentors with high rating
 export const getMentorsWithHighRating = async (req, res) => {
   try {
@@ -474,10 +473,12 @@ export const getResetPassword = async (req, res) => {
 // Get All Users
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    // Exclude users with the role 'admin'
+    const users = await User.find({ role: { $ne: "admin" } });
+
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch Users" });
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 };
 

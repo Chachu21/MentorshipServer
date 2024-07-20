@@ -5,13 +5,11 @@ import {
   getCommentById,
   getComments,
 } from "../controllers/commentController.js";
-// import { verifyToken } from "../midleware/jwtMiddleware.js";
+import { verifyToken } from "../middlewares/jwtMiddleware.js";
 const commetRouter = express.Router();
 
 //Create a comment
-// commetRouter.post("/create", verifyToken, createComment);
-commetRouter.post("/create", createComment);
-
+commetRouter.post("/create", verifyToken, createComment);
 
 //Get all comments
 commetRouter.get("/gets", getComments);

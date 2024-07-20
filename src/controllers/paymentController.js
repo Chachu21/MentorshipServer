@@ -122,6 +122,9 @@ const verifyPayment = async (req, res) => {
     // Extract necessary data from the Chapa response
     const chapaData = responseFromChapa.data.data;
     console.log("chapa verify data", chapaData);
+    if (!chapaData.currency) {
+      chapaData.currency = "ETB"; // default currency
+    }
 
     // Construct payment object with required fields
     const payment = new Payment({
@@ -146,7 +149,6 @@ const verifyPayment = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
     // Update the user's remaining balance
     user.remainingBalance += chapaData.amount;
     await user.save();

@@ -26,7 +26,7 @@ import {
 const userRouter = express.Router();
 
 userRouter.get("resetPassword/:token", getResetPassword);
-userRouter.get("/", getUsers);
+userRouter.get("/get", getUsers);
 userRouter.post("/login", loginController);
 userRouter.put("/update/:id", updateUser);
 userRouter.get("/mentors", getMentorsByService);

@@ -2,17 +2,33 @@ import mongoose from "mongoose";
 
 const mentorshipSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    title: {
+      type: String,
+      required: true,
+    },
     skills: [{ type: String, required: true }],
     description: {
       type: String,
       required: true,
     },
-    goal: { type: String, required: true },
-    service: { type: String, required: true },
+    goal: {
+      type: String,
+      required: true,
+    },
+    service: {
+      type: String,
+      required: true,
+    },
     YourPayment: { type: Number },
-    amount: { type: Number, required: true },
-    duration: { type: String, required: true },
+    amount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    duration: {
+      type: String,
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
