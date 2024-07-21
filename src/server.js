@@ -17,6 +17,7 @@ import messageRouter from "./routes/messageRoute.js";
 import attendanceRoutes from "./routes/attendanceRoute.js";
 import contractRoute from "./routes/contractRoute.js";
 import proposalRouter from "./routes/proposalRoute.js";
+import feedbackRouter from "./routes/feedbackRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
@@ -44,6 +45,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/chats", chatRouter);
 app.use("/api/v1/messages", messageRouter);
 app.use("/api/v1/comment", commetRouter);
+app.use("/api/v1/feedback", feedbackRouter);
 app.use("/api/v1/recommend", recommendationRouter);
 app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/availablity", availablityRouter);

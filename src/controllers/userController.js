@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/users.js";
+import Mentorship from "../models/mentorship.js";
 // import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -492,11 +493,11 @@ export const getUsers = async (req, res) => {
     res.json(formattedUsers);
   } catch (error) {
     console.error("Error fetching users:", error);
-  //   // Exclude users with the role 'admin'
-  //   const users = await User.find({ role: { $ne: "admin" } });
+    //   // Exclude users with the role 'admin'
+    //   const users = await User.find({ role: { $ne: "admin" } });
 
-  //   res.json(users);
-  // } catch (error) {
+    //   res.json(users);
+    // } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 };
@@ -670,8 +671,15 @@ export const getMenteesOfSpecificMentor = async (req, res) => {
       return res.status(404).json({ message: "Mentor not found" });
     }
 
-    // Get the array of mentees for the mentor
-    const mentees = mentor.mentees;
+    // Find the mentorship details for the mentor
+    const mentorship = await Mentorship.findOne({ mentor: mentorId });
+
+    if (!mentorship) {
+      return res.status(404).json({ message: "Mentorship details not found" });
+    }
+
+    // Get the array of mentees from the mentorship model
+    const mentees = mentorship.mentees;
     console.log(mentees);
 
     // Initialize an empty array to store mentee details
@@ -691,6 +699,7 @@ export const getMenteesOfSpecificMentor = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch mentees" });
   }
 };
+
 
 // Function to send password reset email
 // const sendPasswordResetEmail = async (email, token) => {

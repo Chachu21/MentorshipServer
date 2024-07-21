@@ -18,6 +18,7 @@ import {
   findUserByEmail,
   updateUser,
   matchMentors,
+  getMenteesOfSpecificMentor,
   searchBasedNameAndRole,
   searchMentors,
   getMentorsByCategory,
