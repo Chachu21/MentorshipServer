@@ -49,10 +49,11 @@ export const createProposal = async (req, res) => {
 };
 // Update the status of a proposal
 export const updateProposalStatus = async (req, res) => {
+  const proposal_id = req.params.id;
   try {
     const user_id = req.user;
-    const { proposal_id, status } = req.body;
-
+    const { status } = req.body;
+    console.log(req.body);
     // Validate the status
     const validStatuses = ["accepted", "rejected"];
     if (!validStatuses.includes(status)) {

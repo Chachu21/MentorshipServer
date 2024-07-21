@@ -13,5 +13,5 @@ proposalRouter.post("/create", verifyToken, createProposal);
 proposalRouter.get("/", getAllProposals);
 proposalRouter.get("/mentor", verifyToken, getProposalsByMentorId);
 proposalRouter.get("/mentee", verifyToken, getAllProposalsByMenteeId);
-proposalRouter.put("/update", verifyToken, updateProposalStatus);
+proposalRouter.put("/update/:id", verifyToken, updateProposalStatus);
 export default proposalRouter;

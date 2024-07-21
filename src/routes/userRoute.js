@@ -1,7 +1,6 @@
 import express from "express";
 import {
   createUser,
-  getUsers,
   getUserById,
   loginController,
   getResetPassword,
@@ -22,11 +21,16 @@ import {
   searchMentors,
   getMentorsByCategory,
   getMentorsBySkill,
+  getMenteesOfSpecificMentor,
+  updatePassword,
+  approveMentor,
+  deleteUser,
+  getAllUsers,
 } from "../controllers/userController.js";
 const userRouter = express.Router();
-
+import { verifyToken } from "../middlewares/jwtMiddleware.js";
 userRouter.get("resetPassword/:token", getResetPassword);
-userRouter.get("/get", getUsers);
+userRouter.get("/get", getAllUsers);
 userRouter.post("/login", loginController);
 userRouter.put("/update/:id", updateUser);
 userRouter.get("/mentors", getMentorsByService);
@@ -54,5 +58,8 @@ userRouter.post(
   "/resetPassword/:token",
   resetPassword // Function to send password reset email
 );
+userRouter.put("/mentor/approve/:id", approveMentor);
+userRouter.delete("/delete/:id", deleteUser);
+userRouter.put("/updatepassword", verifyToken, updatePassword);
 
 export default userRouter;

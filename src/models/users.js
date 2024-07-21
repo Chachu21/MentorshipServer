@@ -109,7 +109,6 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    //added for mentor remainingBalance for payment transafer calculations
     remainingBalance: {
       type: Number,
       default: 0,
