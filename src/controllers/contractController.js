@@ -66,8 +66,8 @@ export const getByMentorId = async (req, res) => {
     }
     const contracts = await Contract.find({ mentor_id })
       .populate("mentorship_id", "title")
-      .populate("mentor_id", "name")
-      .populate("mentee_id", "name");
+      .populate("mentor_id", "fullName")
+      .populate("mentee_id", "fullName");
     if (!contracts || contracts.length === 0) {
       return res.status(404).json({ error: "Contracts not found" });
     }
@@ -141,7 +141,7 @@ export const updateContract = async (req, res) => {
 
     // Save the updated contract
     const updatedContract = await contract.save();
-     // Populate fields and return the response
+    // Populate fields and return the response
     const populatedContract = await Contract.findById(updatedContract._id)
       .populate("mentorship_id", "title")
       .populate("mentor_id", "name")

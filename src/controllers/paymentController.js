@@ -161,6 +161,7 @@ const verifyPayment = async (req, res) => {
 };
 const transferPayment = async (req, res) => {
   const userId = req.params.userId; // Extract userId from request parameters
+  console.log(req.body);
   const {
     account_name,
     account_number,

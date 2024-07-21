@@ -24,11 +24,13 @@ const userSchema = new mongoose.Schema(
       region: { type: String },
       zipCode: { type: Number },
     },
-    bank_account: {
-      bank_name: { type: String },
-      account_holder_name: { type: String },
-      account_no: { type: String },
-    },
+    bank_account: [
+      {
+        bank_name: { type: String },
+        account_holder_name: { type: String },
+        account_no: { type: String },
+      },
+    ],
     level: {
       type: String,
     },
@@ -100,6 +102,10 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
     rate: {
+      type: Number,
+      default: 0,
+    },
+    no_review: {
       type: Number,
       default: 0,
     },

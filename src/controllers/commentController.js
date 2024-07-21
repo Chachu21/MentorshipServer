@@ -26,9 +26,12 @@ export const createComment = async (req, res) => {
           comments.length
         ).toFixed(2)
       : "0.00";
-
+    const NumberOfComments = comments.length;
     // Update the mentor's rating in the User model
-    await User.findByIdAndUpdate(mentorId, { rate: parseFloat(averageRating) });
+    await User.findByIdAndUpdate(mentorId, {
+      rate: parseFloat(averageRating),
+      no_review: NumberOfComments,
+    });
 
     // Respond with the created comment
     res.status(200).json(newComment);
@@ -69,5 +72,25 @@ export const deleteComment = async (req, res) => {
     res.json(comment);
   } catch (error) {
     res.status(500).json({ error: "Failed to delete Comment" });
+  }
+};
+
+//get comment by mentor id
+export const getCommentByMentorId = async (req, res) => {
+  const { id } = req.params; // Extract mentor ID from request parameters
+
+  try {
+    const comments = await Comment.find({ mentor: id }).populate({
+      path: "user", // Assuming 'user' is the field in your Comment model that references the User model
+      select: "profileImage fullName", // Fields to populate
+    }); // Use find to find all comments by mentor ID
+    if (!comments) {
+      return res
+        .status(404)
+        .json({ error: "No comments found for this mentor" });
+    }
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch comments" });
   }
 };
