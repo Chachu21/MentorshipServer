@@ -42,6 +42,7 @@ userRouter.get("/get/bycategory", getMentorsByCategory);
 userRouter.get("/get/:id", getUserById);
 userRouter.get("/get/:email", findUserByEmail);
 userRouter.get("/mentor/match/:id", matchMentors);
+userRouter.get("/mentees/:mentorId", getMenteesOfSpecificMentor);
 userRouter.post("/signUp", createUser);
 userRouter.post("/forgotpassword", forgotPassword);
 userRouter.post("/verify-email", verifyEmail);

@@ -68,7 +68,7 @@ export const fetchChats = async (req, res) => {
 };
 
 export const createGroupChat = async (req, res) => {
-  const { users, name } = req.body;
+  const { users, name, groupAdmin } = req.body;
 
   if (!users || !name) {
     return res.status(400).send({ message: "Please fill all the fields" });

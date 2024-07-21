@@ -473,11 +473,30 @@ export const getResetPassword = async (req, res) => {
 // Get All Users
 export const getUsers = async (req, res) => {
   try {
-    // Exclude users with the role 'admin'
-    const users = await User.find({ role: { $ne: "admin" } });
+    const query = req.query.query || ""; // Get the query parameter
 
-    res.json(users);
+    // Find users matching the query, performing a case-insensitive search
+    const users = await User.find({
+      fullName: { $regex: query, $options: "i" },
+    });
+
+    // Map the users to include necessary fields for the front-end component
+    const formattedUsers = users.map((user) => ({
+      id: user._id, // Make sure you use the correct identifier from your schema
+      name: user.fullName,
+      avatar: user.profileImage, // Adjust this field based on your schema
+      // message: user.messages, // Assuming `messages` field exists in your schema
+      unreadMessages: user.unreadMessages || 0, // Default to 0 if undefined
+    }));
+
+    res.json(formattedUsers);
   } catch (error) {
+    console.error("Error fetching users:", error);
+  //   // Exclude users with the role 'admin'
+  //   const users = await User.find({ role: { $ne: "admin" } });
+
+  //   res.json(users);
+  // } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
   }
 };
@@ -639,6 +658,52 @@ export const matchMentors = async (req, res) => {
   }
 };
 
+export const getMenteesOfSpecificMentor = async (req, res) => {
+  try {
+    const { mentorId } = req.params;
+    console.log(mentorId);
+
+    // Find the mentor by ID
+    const mentor = await User.findById(mentorId);
+
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+
+    // Get the array of mentees for the mentor
+    const mentees = mentor.mentees;
+    console.log(mentees);
+
+    // Initialize an empty array to store mentee details
+    const menteeDetails = [];
+
+    // Loop through mentees and find user by ID, then extract details
+    for (const menteeId of mentees) {
+      const mentee = await User.findById(menteeId);
+      if (mentee) {
+        menteeDetails.push({ _id: mentee._id, name: mentee.fullName });
+      }
+    }
+
+    res.status(200).json(menteeDetails);
+  } catch (error) {
+    console.error("Error fetching mentees:", error);
+    res.status(500).json({ error: "Failed to fetch mentees" });
+  }
+};
+
+// Function to send password reset email
+// const sendPasswordResetEmail = async (email, token) => {
+//   try {
+//     const transporter = nodemailer.createTransport({
+//       host: "smtp.gmail.com",
+//       port: 465,
+//       secure: true, // Use SSL/TLS
+//       auth: {
+//         user: "chilotnathnael@gmail.com",
+//         pass: "wwgl ktvw dfmn cmwg", // Use your Gmail app password or account password
+//       },
+//     });
 //search user using name and role
 export const searchBasedNameAndRole = async (req, res) => {
   try {
