@@ -102,9 +102,7 @@ export const getUserGroupChats = async (req, res) => {
     const groupChats = await Chat.find({
       isGroupChat: true,
       participants: { $in: [userId] },
-    })
-      .populate("participants", "-password")
-      .populate("groupAdmin");
+    }).populate("chatName");
 
     res.status(200).json(groupChats);
   } catch (error) {
