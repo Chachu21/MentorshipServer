@@ -472,33 +472,13 @@ export const getResetPassword = async (req, res) => {
   }
 };
 // Get All Users
-export const getUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
-    const query = req.query.query || ""; // Get the query parameter
-
-    // Find users matching the query, performing a case-insensitive search
-    const users = await User.find({
-      fullName: { $regex: query, $options: "i" },
-    });
-
-    // Map the users to include necessary fields for the front-end component
-    const formattedUsers = users.map((user) => ({
-      id: user._id, // Make sure you use the correct identifier from your schema
-      name: user.fullName,
-      avatar: user.profileImage, // Adjust this field based on your schema
-      // message: user.messages, // Assuming `messages` field exists in your schema
-      unreadMessages: user.unreadMessages || 0, // Default to 0 if undefined
-    }));
-
-    res.json(formattedUsers);
+    const users = await User.find().select("-password"); // Exclude password field from the response
+    res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    //   // Exclude users with the role 'admin'
-    //   const users = await User.find({ role: { $ne: "admin" } });
-
-    //   res.json(users);
-    // } catch (error) {
-    res.status(500).json({ error: "Failed to fetch users" });
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
@@ -515,20 +495,6 @@ export const getUserById = async (req, res) => {
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch User" });
-  }
-};
-
-export const deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    // console.log(userId);
-    const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json(deletedUser);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete User" });
   }
 };
 
@@ -762,5 +728,76 @@ export const searchMentors = async (req, res) => {
   } catch (error) {
     console.error("Error searching users:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Controller to update password
+export const updatePassword = async (req, res) => {
+  console.log(req.body);
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(req.user).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await user.comparePassword(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    // console.log(userId);
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(deletedUser);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete User" });
+  }
+};
+//Todo
+
+//
+export const approveMentor = async (req, res) => {
+  try {
+    const mentorId = req.params.id;
+    console.log("am inside mentor approve controller", mentorId);
+
+    // Check if the mentor exists
+    const mentor = await User.findById(mentorId);
+    if (!mentor) {
+      return res.status(404).json({ error: "Mentor not found" });
+    }
+
+    // Update the is_approved field to true
+    const updatedMentor = await User.findByIdAndUpdate(
+      mentorId,
+      { is_approved: true },
+      { new: true }
+    );
+
+    if (!updatedMentor) {
+      return res.status(404).json({ error: "Failed to approve mentor" });
+    }
+
+    // Send success response with updated mentor data
+    res.status(200).json(updatedMentor);
+  } catch (error) {
+    console.error("Error approving mentor:", error);
+    res.status(500).json({ error: "Failed to approve mentor" });
   }
 };

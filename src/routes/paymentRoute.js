@@ -17,7 +17,7 @@ paymentRouter.post("/accept-payment", verifyToken, acceptPayment);
 paymentRouter.get("/verify-payment/:id/:userId", verifyPayment);
 paymentRouter.get("/get", getAllPayments);
 paymentRouter.get("/get/:userId", getAllPaymentsByUserId);
-paymentRouter.post("/initiate-transfer", transferPayment);
+paymentRouter.post("/initiate-transfer/:userId", transferPayment);
 paymentRouter.get("/transfers", getAllTransfers);
 paymentRouter.get("/transfers/:reference", getTransferByReference);
 export default paymentRouter;

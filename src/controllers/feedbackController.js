@@ -3,7 +3,6 @@ import FeedBack from "../models/feedback.js";
 //create a new comment
 
 export const createFeedBack = async (req, res) => {
-  console.log(req.body);
   const newComment = new FeedBack({
     name: req.body.name,
     email: req.body.email,

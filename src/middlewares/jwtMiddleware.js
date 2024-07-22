@@ -21,6 +21,10 @@ export const verifyToken = async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+      // jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      //   if (err) {
+      //     console.log(err);
+      //     return res.status(403).json({ message: err.message, status: err.status });
     }
 
     req.user = user;

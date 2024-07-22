@@ -54,6 +54,7 @@ app.use("/api/v1/mentorship", mentorshipRoute);
 app.use("/api/v1/attendance", attendanceRoutes);
 app.use("/api/v1/contract", contractRoute);
 app.use("/api/v1/proposal", proposalRouter);
+app.use("/api/v1/feedback", feedbackRouter);
 
 io.on("connection", (socket) => {
   console.log("Connected to socket.io");

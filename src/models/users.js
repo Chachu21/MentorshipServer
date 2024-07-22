@@ -24,11 +24,13 @@ const userSchema = new mongoose.Schema(
       region: { type: String },
       zipCode: { type: Number },
     },
-    bank_account: {
-      bank_name: { type: String },
-      account_holder_name: { type: String },
-      account_no: { type: String },
-    },
+    bank_account: [
+      {
+        bank_name: { type: String },
+        account_holder_name: { type: String },
+        account_no: { type: String },
+      },
+    ],
     level: {
       type: String,
     },
@@ -103,7 +105,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    //added for mentor remainingBalance for payment transafer calculations
+    no_review: {
+      type: Number,
+      default: 0,
+    },
     remainingBalance: {
       type: Number,
       default: 0,
