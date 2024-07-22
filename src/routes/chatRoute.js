@@ -8,10 +8,12 @@ import {
   removeFromGroup,
   addToGroup,
   renameGroup,
+  getUserGroupChats,
 } from "../controllers/chatController.js";
 import { verifyToken } from "../middlewares/jwtMiddleware.js";
 
 const chatRouter = express.Router();
+chatRouter.get("/get", verifyToken, getUserGroupChats);
 chatRouter.get("/:chatId", verifyToken, allMessages);
 chatRouter.post("/", verifyToken, sendMessage);
 chatRouter.post("/access/:userId", verifyToken, accessChat);

@@ -93,6 +93,24 @@ export const createGroupChat = async (req, res) => {
   }
 };
 
+// Controller to get all group chats the user is a participant in
+export const getUserGroupChats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    console.log(userId);
+
+    const groupChats = await Chat.find({
+      isGroupChat: true,
+      participants: { $in: [userId] },
+    }).populate("chatName");
+
+    res.status(200).json(groupChats);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Server Error");
+  }
+};
+
 export const renameGroup = async (req, res) => {
   const { id, chatName } = req.body;
 

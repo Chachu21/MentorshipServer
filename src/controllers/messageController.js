@@ -22,7 +22,7 @@ export const sendMessage = async (req, res) => {
         model: "User",
       },
     });
-    await Chat.findByIdAndUpdate(chatId, {
+    await Chat.findByIdAndUpdate(sendorId, {
       latestMessage: msg,
     });
     res.status(200).send(msg);
@@ -33,16 +33,16 @@ export const sendMessage = async (req, res) => {
 };
 
 export const getMessages = async (req, res) => {
-  const { chatId } = req.params;
+  const { sendorId } = req.params;
   try {
-    let messages = await Message.find({ chatId })
+    let messages = await Message.find({ sendorId })
       .populate({
         path: "sender",
         model: "User",
         select: "name profilePic email",
       })
       .populate({
-        path: "chatId",
+        path: "sendorId",
         model: "Chat",
       });
 
