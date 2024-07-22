@@ -792,3 +792,12 @@ export const approveMentor = async (req, res) => {
     res.status(500).json({ error: "Failed to approve mentor" });
   }
 };
+
+export const getUserByLimit = async (req, res) => {
+  try {
+    const mentors = await User.find({ role: "mentor" }).limit(3);
+    res.status(200).json(mentors);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

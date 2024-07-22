@@ -26,11 +26,13 @@ import {
   approveMentor,
   deleteUser,
   getAllUsers,
+  getUserByLimit,
 } from "../controllers/userController.js";
 const userRouter = express.Router();
 import { verifyToken } from "../middlewares/jwtMiddleware.js";
 userRouter.get("resetPassword/:token", getResetPassword);
 userRouter.get("/get", getAllUsers);
+userRouter.get("/get/limit", getUserByLimit);
 userRouter.post("/login", loginController);
 userRouter.put("/update/:id", updateUser);
 userRouter.get("/mentors", getMentorsByService);

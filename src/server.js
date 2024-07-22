@@ -21,12 +21,10 @@ import feedbackRouter from "./routes/feedbackRoute.js";
 //instantait the express
 const app = express();
 const port = process.env.PORT || 5000;
-
 const server = createServer(app);
 const io = new Server(server, {
   connectionStateRecovery: {},
 });
-
 dotenv.config();
 //connect to the database
 createDatabase();
