@@ -1,6 +1,6 @@
 import Payment from "../models/payment.js";
 import User from "../models/users.js";
-
+import { backend_url, frontend_url } from "../utils/constant.js";
 import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
@@ -29,15 +29,17 @@ async function retryRequest(requestPromise, retryCount = 0) {
 
 //TODO
 const CHAPA_AUTH_KEY = process.env.CHAPA_AUTH_KEY; //Put Your Chapa Secret Key
-
 const acceptPayment = async (req, res) => {
-  const userId = req.user;
+  const userId = req.user; // Retrieve user data from request
+  // console.log("User Data:", userId); // Log user data
+
   const { amount, currency, email, first_name, last_name, phone_number } =
-    req.body;
-  console.log(req.body);
-  const TEXT_REF = `${first_name}${Date.now()}`;
-  //const CALLBACK_URL = `https://api.chapa.co/v1/payment/verify-payment/${TEXT_REF}`;
-  const CALLBACK_URL = `http://localhost:5000/api/v1/payment/verify-payment/${TEXT_REF}/${userId}`;
+    req.body; // Destructure required fields from request body
+  // console.log("Payment Data:", req.body); // Log payment data
+
+  const TEXT_REF = `${first_name}${Date.now()}`; // Generate a unique transaction reference
+  const CALLBACK_URL = `${backend_url}/api/v1/payment/verify-payment/${TEXT_REF}/${userId}`; // Define callback URL
+
   try {
     const config = {
       headers: {
@@ -50,11 +52,11 @@ const acceptPayment = async (req, res) => {
       amount,
       currency,
       email,
-      first_name: first_name,
-      last_name: last_name,
-      phone_number: phone_number,
+      first_name,
+      last_name,
+      phone_number,
       tx_ref: TEXT_REF,
-      return_url: "http://localhost:3000/menteedashboard/settings/get-paid",
+      return_url: `${frontend_url}/menteedashboard/settings/get-paid`,
       callback_url: CALLBACK_URL,
     };
     const response = await retryRequest(
@@ -63,22 +65,17 @@ const acceptPayment = async (req, res) => {
     res.status(200).json(response.data);
   } catch (error) {
     if (error.response) {
-      // The request was made and the server responded with a status code
       if (error.response.status === 400) {
-        // Bad request error
         return res.status(400).json({
           error: "Bad Request",
           message: "The request was invalid. Please check your input data.",
         });
       } else if (error.response.status === 401) {
-        // Unauthorized error
-        console.log(error);
         return res.status(401).json({
           error: "Unauthorized",
           message: "Authentication failed. Please check your credentials.",
         });
       } else {
-        // Other status codes
         return res.status(500).json({
           error: "Internal Server Error",
           message:
@@ -86,13 +83,13 @@ const acceptPayment = async (req, res) => {
         });
       }
     } else if (error.request) {
-      // The request was made but no response was received
+      // Handle case where no response was received
       return res.status(500).json({
         error: "No Response",
         message: "The server did not respond. Please try again later.",
       });
     } else {
-      // Something else happened in setting up the request
+      // Handle other errors
       return res.status(500).json({
         error: "Request Error",
         message: "Failed to make the request. Please try again later.",
