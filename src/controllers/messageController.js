@@ -3,10 +3,13 @@ import Message from "../models/message.js";
 import User from "../models/users.js";
 
 export const sendMessage = async (req, res) => {
-  const { chatId, message, sendorId, receiverId } = req.body;
+  const { chatId, message, senderId, receiverId } = req.body;
+  console.log("req.body am sidellllllllllllll");
+
+  console.log("req.body", req.body);
   try {
     let msg = await Message.create({
-      sender: sendorId,
+      sender: senderId,
       receiver: receiverId,
       message,
       chatId,
@@ -42,7 +45,7 @@ export const getMessages = async (req, res) => {
         select: "name profilePic email",
       })
       .populate({
-        path: "sendorId",
+        path: "senderId",
         model: "Chat",
       });
 
@@ -50,5 +53,46 @@ export const getMessages = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
     console.log(error);
+  }
+};
+
+export const getUsersBySender = async (req, res) => {
+  const senderId = req.params.senderId;
+
+  try {
+    // Find all messages where the sender is the given senderId
+    const messages = await Message.find({ sender: senderId })
+      .populate({
+        path: "sender",
+        select: "fullName email profileImage.url",
+        model: "User",
+      })
+      .populate({
+        path: "receiver",
+        select: "fullName email profileImage.url",
+        model: "User",
+      });
+
+    if (!messages || messages.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No messages found for this sender" });
+    }
+
+    // Extract unique users from the messages
+    const users = [];
+    const userIds = new Set();
+
+    messages.forEach((message) => {
+      if (!userIds.has(message.receiver._id.toString())) {
+        userIds.add(message.receiver._id.toString());
+        users.push(message.receiver);
+      }
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 };

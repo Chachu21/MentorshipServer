@@ -13,7 +13,7 @@ const messageSchema = mongoose.Schema(
       type: String,
       trim: true,
     },
-    sendorId: {
+    senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
     },
