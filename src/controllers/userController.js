@@ -31,7 +31,7 @@ async function retryRequest(requestPromise, retryCount = 0) {
 export const createUser = async (req, res) => {
   const { name, phone, password, email, agreeTerms, role } = req.body;
 
-  console.log(req.body);
+  // console.log(req.body);
   try {
     // Check if the user with the same phone number or email already exists
     const existingUser = await User.findOne({
@@ -80,7 +80,7 @@ export const createUser = async (req, res) => {
     };
     // Send the verification email
     await retryRequest(transporter.sendMail(mailOptions));
-    console.log("Email sent successfully");
+    // console.log("Email sent successfully");
     // Save the new user to the database
     const savedUser = await newUser.save();
 
@@ -324,7 +324,7 @@ export const loginController = async function (req, res) {
         expiresIn: "1d",
       }
     );
-
+    console.log(token, user);
     // Send the token in the response
     res.status(200).json({
       isVerified: user.isVerified,
@@ -550,7 +550,7 @@ export const updateUser = async (req, res) => {
 };
 //if it is not working , please remove retryrequest method
 const uploadImageToCloudinary = async (imageData) => {
-  // console.log(imageData)
+  console.log(imageData);
   try {
     const result = await retryRequest(
       cloudinary.uploader.upload(imageData, {
@@ -665,7 +665,6 @@ export const getMenteesOfSpecificMentor = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch mentees" });
   }
 };
-
 
 // Function to send password reset email
 // const sendPasswordResetEmail = async (email, token) => {

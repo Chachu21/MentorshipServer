@@ -150,11 +150,12 @@ export const getBestMatchingMentorships = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    console.log(user);
     const { professionalRole, skills } = user;
 
     // Ensure skills is an array
     const skillsArray = Array.isArray(skills) ? skills : [skills];
+    console.log(skillsArray);
     // Create a case-insensitive regular expression for professionalRole
     const professionalRoleRegex = new RegExp(
       professionalRole.split(" ").join("|"),
@@ -169,6 +170,7 @@ export const getBestMatchingMentorships = async (req, res) => {
         // { goal: { $in: goalregex } },
       ],
     };
+
     // Executing the search query and sorting by relevance or any other criteria
     const mentorships = await Mentorship.find(query).populate("createdBy");
     res.status(200).json(mentorships);
