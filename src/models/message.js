@@ -13,10 +13,11 @@ const messageSchema = mongoose.Schema(
       type: String,
       trim: true,
     },
-    senderId: {
+    chatId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
     },
+    isRead: { type: Boolean, default: false },
   },
   {
     timestamps: true,
