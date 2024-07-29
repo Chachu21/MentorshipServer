@@ -97,7 +97,7 @@ export const getAttendanceByName = async (req, res) => {
    // const mentee = await User.findById(req.params.id);
 
     const mentee = await User.findOne({ fullName });
-    console.log("Mentee:", mentee);
+    // console.log("Mentee:", mentee);
 
     if (!mentee) {
       return res

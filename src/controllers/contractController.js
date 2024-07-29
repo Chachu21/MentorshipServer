@@ -92,7 +92,7 @@ export const getByMenteeId = async (req, res) => {
     if (!contracts || contracts.length === 0) {
       return res.status(404).json({ error: "Contracts not found" });
     }
-    console.log(contracts);
+    // console.log(contracts);
     res.status(200).json(contracts);
   } catch (error) {
     res.status(500).json({ message: error.message });

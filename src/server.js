@@ -9,8 +9,6 @@ import messageRouter from "./routes/messageRoute.js";
 import commentRouter from "./routes/commentRoutes.js";
 import recommendationRouter from "./routes/recommendationRoute.js";
 import paymentRouter from "./routes/paymentRoute.js";
-import availablityRouter from "./routes/availablityRoute.js";
-import appointmentRouter from "./routes/appointmentRoute.js";
 import mentorshipRoute from "./routes/mentorshipRoute.js";
 import attendanceRoutes from "./routes/attendanceRoute.js";
 import contractRoute from "./routes/contractRoute.js";
@@ -27,7 +25,6 @@ dotenv.config();
 // Instantiate Express
 const app = express();
 const port = process.env.PORT || 5000;
-
 // Create an HTTP server
 const server = createServer(app);
 
@@ -60,8 +57,6 @@ app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/feedback", feedbackRouter);
 app.use("/api/v1/recommend", recommendationRouter);
 app.use("/api/v1/payment", paymentRouter);
-app.use("/api/v1/availablity", availablityRouter);
-app.use("/api/v1/appoint", appointmentRouter);
 app.use("/api/v1/mentorship", mentorshipRoute);
 app.use("/api/v1/attendance", attendanceRoutes);
 app.use("/api/v1/contract", contractRoute);
@@ -109,5 +104,5 @@ io.on("connection", (socket) => {
 
 // Start the server
 server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  // console.log(`Server running at http://localhost:${port}`);
 });

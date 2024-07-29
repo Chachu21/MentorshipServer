@@ -28,7 +28,7 @@ export const sendMessage = async (req, res) => {
     });
     res.status(200).send(msg);
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ error: error });
   }
 };
@@ -50,7 +50,7 @@ export const getMessages = async (req, res) => {
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: error.message });
-    console.log(error);
+    // console.log(error);
   }
 };
 
@@ -117,7 +117,7 @@ export const allUsers = async (req, res) => {
       role: { $ne: "admin" }, // Exclude users with role "admin"
       _id: { $ne: req.user._id }, // Exclude the currently logged-in user
     });
-    console.log(users);
+    // console.log(users);
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);

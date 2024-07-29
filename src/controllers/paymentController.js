@@ -10,11 +10,11 @@ async function retryRequest(requestPromise, retryCount = 0) {
   const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff delay
   return requestPromise.catch((error) => {
     if (error.code === "EAI_AGAIN" && retryCount < 3) {
-      console.log(
-        `DNS lookup failed for ${error.config.url}. Retrying attempt ${
-          retryCount + 1
-        } after ${delay}ms`
-      );
+      // console.log(
+      //   `DNS lookup failed for ${error.config.url}. Retrying attempt ${
+      //     retryCount + 1
+      //   } after ${delay}ms`
+      // );
       return new Promise((resolve) =>
         setTimeout(
           () => resolve(retryRequest(requestPromise, retryCount + 1)),
@@ -115,10 +115,10 @@ const verifyPayment = async (req, res) => {
       axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`, config)
     );
 
-    console.log("something is happening");
+    // console.log("something is happening");
     // Extract necessary data from the Chapa response
     const chapaData = responseFromChapa.data.data;
-    console.log("chapa verify data", chapaData);
+    // console.log("chapa verify data", chapaData);
     if (!chapaData.currency) {
       chapaData.currency = "ETB"; // default currency
     }
@@ -152,13 +152,13 @@ const verifyPayment = async (req, res) => {
 
     res.json({ payment: savedPayment, user });
   } catch (error) {
-    console.log("error from catch", error);
+    // console.log("error from catch", error);
     res.status(500).json({ error: "Failed to verify and save payment" });
   }
 };
 const transferPayment = async (req, res) => {
   const userId = req.params.userId; // Extract userId from request parameters
-  console.log(req.body);
+  // console.log(req.body);
   const {
     account_name,
     account_number,
@@ -209,7 +209,7 @@ const transferPayment = async (req, res) => {
       }
     );
 
-    console.log("Transfer initiated successfully:", response.data);
+    // console.log("Transfer initiated successfully:", response.data);
     res.status(200).json({
       message: "Transfer initiated successfully",
       serviceFee: serviceFee.toFixed(2), // Return the service fee as well
@@ -238,7 +238,7 @@ const getAllTransfers = async (req, res) => {
       },
     });
 
-    console.log("Transfers fetched successfully:", response.data);
+    // console.log("Transfers fetched successfully:", response.data);
     res.status(200).json({
       message: "Transfers fetched successfully",
       data: response.data,
@@ -267,7 +267,7 @@ const getTransferByReference = async (req, res) => {
       }
     );
 
-    console.log("Transfer fetched successfully:", response.data);
+    // console.log("Transfer fetched successfully:", response.data);
     res.status(200).json({
       message: "Transfer fetched successfully",
       data: response.data,
@@ -281,65 +281,6 @@ const getTransferByReference = async (req, res) => {
   }
 };
 
-// const verifyPayment = async (req, res) => {
-//   console.log("am inside verify payment");
-//   const tx_ref = req.params.id;
-//   const group_id = req.params.groupId;
-//   const user_id = req.params.userId;
-//   const round = req.params.round;
-//   // console.log("params", req.params);
-//   // req header with chapa secret key
-//   const config = {
-//     headers: {
-//       Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
-//     },
-//   };
-//   //verify the transaction
-//   try {
-//     const responseFromChapa = await retryRequest(
-//       axios.get(`https://api.chapa.co/v1/transaction/verify/${tx_ref}`)
-//     );
-//     // console.log(responseFromChapa);
-//     console.log("something is happen");
-//     // Extract necessary data from the Chapa response
-//     const chapaData = responseFromChapa.data.data;
-//     console.log("chapa verify data", chapaData);
-//     // Construct payment object with required fields
-//     const payment = new Payment({
-//       tx_ref: chapaData.tx_ref,
-//       email: chapaData.email,
-//       phoneNumber: chapaData.phoneNumber,
-//       fullName: chapaData.fullName,
-//       amount: chapaData.amount,
-//       currency: chapaData.currency,
-//       reference: chapaData.reference,
-//       status: chapaData.status,
-//       verified_at: new Date(), // Add verified_at field with current date/time
-
-//     });
-
-//     // Save the transaction
-//     const savedPayment = await payment.save();
-//     // console.log("saved transaction", savedPayment);
-//     res.json(savedPayment);
-//   } catch (error) {
-//     console.log("error from catch", error);
-//     res.status(500).json({ error: "Failed to verify and save payment" });
-//   }
-// };
-// //List banks
-// const response = axios.get("https://api.chapa.co/v1/banks", {
-//   headers: {
-//     Authorization: `Bearer ${CHAPA_AUTH_KEY}`,
-//     "Content-Type": "application/json",
-//   },
-// });
-// const banks = response.data;
-// console.log(banks);
-// //trnsfer payment to the winner
-// const transferPayment = async (req, res) => {
-//   const response = await axios.post("https://api.chapa.co/v1/transfers");
-// };
 // Get all payments
 const getAllPayments = async (req, res) => {
   try {
@@ -359,7 +300,7 @@ const getAllPaymentsByUserId = async (req, res) => {
     // .populate("equbGroup");
     res.json(payments);
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ error: "Failed to retrieve payments for the user" });
   }
 };

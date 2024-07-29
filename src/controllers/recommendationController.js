@@ -2,9 +2,8 @@ import { preprocessUserData } from "../utils/preprocess.js";
 import { calculateSimilarity } from "../utils/calculateSimilarity.js";
 import User from "../models/users.js";
 
-
 //TODO
-// the recommendation is based on similarity in 
+// the recommendation is based on similarity in
 //     0.4 * skillSimilarity +
 //     0.3 * expertiseSimilarity +
 //     0.1 * experienceLevelSimilarity +

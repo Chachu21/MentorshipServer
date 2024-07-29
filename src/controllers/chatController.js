@@ -8,7 +8,7 @@ export const accessChat = async (req, res) => {
   const { userId } = req.params;
 
   if (!userId) {
-    console.log("userId param not sent with request");
+    // console.log("userId param not sent with request");
     return res.sendStatus(400);
   }
 
@@ -97,7 +97,7 @@ export const createGroupChat = async (req, res) => {
 export const getUserGroupChats = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log(userId);
+    // console.log(userId);
 
     const groupChats = await Chat.find({
       isGroupChat: true,
@@ -196,7 +196,7 @@ export const sendMessage = async (req, res) => {
   const { content, chatId } = req.body;
 
   if (!content || !chatId) {
-    console.log("Invalid data passed into request");
+    // console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
 

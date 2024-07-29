@@ -11,11 +11,11 @@ async function retryRequest(requestPromise, retryCount = 0) {
   const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff delay
   return requestPromise.catch((error) => {
     if (error.code === "EAI_AGAIN" && retryCount < 3) {
-      console.log(
-        `DNS lookup failed for ${error.config.url}. Retrying attempt ${
-          retryCount + 1
-        } after ${delay}ms`
-      );
+      // console.log(
+      //   `DNS lookup failed for ${error.config.url}. Retrying attempt ${
+      //     retryCount + 1
+      //   } after ${delay}ms`
+      // );
       return new Promise((resolve) =>
         setTimeout(
           () => resolve(retryRequest(requestPromise, retryCount + 1)),
@@ -93,7 +93,7 @@ export const createUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error during user creation:", error);
-    console.log("error code", error.code);
+    // console.log("error code", error.code);
     if (error.code === "ESOCKET" || error.code === "ECONNREFUSED") {
       return res.status(504).json({ error: "Your connection is unstable" });
     }
@@ -119,7 +119,7 @@ export const getMentorsByCategory = async (req, res) => {
     res.status(200).json(mentors);
   } catch (error) {
     res.status(500).json({ message: error.message });
-    console.log(error.message);
+    // console.log(error.message);
   }
 };
 
@@ -256,7 +256,7 @@ export const resendVerificationCode = async (req, res) => {
     if (user.isVerified) {
       return res.status(400).json({ message: "Email is already verified" });
     }
-    console.log("kkkkkkkkkkk");
+    // console.log("kkkkkkkkkkk");
     const verificationCode = crypto.randomInt(100000, 999999).toString();
     user.verificationCode = verificationCode;
     user.verificationCodeExpires = Date.now() + 3600000; // 1 hour
@@ -281,12 +281,12 @@ export const resendVerificationCode = async (req, res) => {
     };
     // Send the verification email
     await retryRequest(transporter.sendMail(mailOptions));
-    console.log("Email sent successfully");
+    // console.log("Email sent successfully");
     res
       .status(200)
       .json({ message: "Verification code resent. Please check your email." });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ message: "Server error", error });
   }
 };
@@ -324,7 +324,7 @@ export const loginController = async function (req, res) {
         expiresIn: "1d",
       }
     );
-    console.log(token, user);
+    // console.log(token, user);
     // Send the token in the response
     res.status(200).json({
       isVerified: user.isVerified,
@@ -334,7 +334,7 @@ export const loginController = async function (req, res) {
       message: "successfully logged in",
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ error: "An error occurred while logging in" });
   }
 };
@@ -362,7 +362,7 @@ const sendPasswordResetEmail = async (email, token) => {
     };
 
     await retryRequest(transporter.sendMail(mailOptions));
-    console.log("Password reset emails sent successfully");
+    // console.log("Password reset emails sent successfully");
   } catch (error) {
     console.error("Error sending password reset emails:", error);
     throw error;
@@ -529,7 +529,7 @@ export const updateUser = async (req, res) => {
         );
         updateData.profileImage = profileImage;
       } else {
-        console.log("Profile image is already the same.");
+        // console.log("Profile image is already the same.");
       }
     }
 
@@ -550,7 +550,7 @@ export const updateUser = async (req, res) => {
 };
 //if it is not working , please remove retryrequest method
 const uploadImageToCloudinary = async (imageData) => {
-  console.log(imageData);
+  // console.log(imageData);
   try {
     const result = await retryRequest(
       cloudinary.uploader.upload(imageData, {
@@ -628,7 +628,7 @@ export const matchMentors = async (req, res) => {
 export const getMenteesOfSpecificMentor = async (req, res) => {
   try {
     const { mentorId } = req.params;
-    console.log(mentorId);
+    // console.log(mentorId);
 
     // Find the mentor by ID
     const mentor = await User.findById(mentorId);
@@ -646,7 +646,7 @@ export const getMenteesOfSpecificMentor = async (req, res) => {
 
     // Get the array of mentees from the mentorship model
     const mentees = mentorship.mentees;
-    console.log(mentees);
+    // console.log(mentees);
 
     // Initialize an empty array to store mentee details
     const menteeDetails = [];
@@ -732,7 +732,7 @@ export const searchMentors = async (req, res) => {
 
 // Controller to update password
 export const updatePassword = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   const { oldPassword, newPassword } = req.body;
 
   try {
@@ -774,7 +774,7 @@ export const deleteUser = async (req, res) => {
 export const approveMentor = async (req, res) => {
   try {
     const mentorId = req.params.id;
-    console.log("am inside mentor approve controller", mentorId);
+    // console.log("am inside mentor approve controller", mentorId);
 
     // Check if the mentor exists
     const mentor = await User.findById(mentorId);

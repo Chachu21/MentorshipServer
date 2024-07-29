@@ -53,7 +53,7 @@ export const updateProposalStatus = async (req, res) => {
   try {
     const user_id = req.user;
     const { status } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     // Validate the status
     const validStatuses = ["accepted", "rejected"];
     if (!validStatuses.includes(status)) {
