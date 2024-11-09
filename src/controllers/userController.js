@@ -318,7 +318,10 @@ export const loginController = async function (req, res) {
 
     // Generate a JWT token
     const token = jwt.sign(
-      { userId: user._id, email },
+      {
+        userId: user._id,
+        email,
+      },
       process.env.JWT_SECRET,
       {
         expiresIn: "1d",
@@ -332,6 +335,7 @@ export const loginController = async function (req, res) {
       token,
       role: user.role,
       message: "successfully logged in",
+      is_account_full_created: user.is_account_full_created,
     });
   } catch (error) {
     // console.log(error);
@@ -502,8 +506,6 @@ export const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const { updates } = req.body;
-
-    // console.log("updates", updates);
     const updateData = {};
     // Check if user exists
     const user = await User.findById(userId);

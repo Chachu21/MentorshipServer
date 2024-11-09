@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
       public_id: { type: String },
       url: { type: String },
     },
+    is_account_full_created: {
+      type: Boolean,
+      default: false,
+    },
     is_approved: {
       type: Boolean,
       default: false,
