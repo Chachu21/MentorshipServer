@@ -28,6 +28,9 @@ async function retryRequest(requestPromise, retryCount = 0) {
   });
 }
 
+const email_user = process.env.EMAIL_USER;
+const email_pass = process.env.EMAIL_PASS;
+
 export const createUser = async (req, res) => {
   const { name, phone, password, email, agreeTerms, role } = req.body;
 
@@ -67,13 +70,13 @@ export const createUser = async (req, res) => {
       port: 465,
       secure: true, // Use SSL/TLS
       auth: {
-        user: "mulukendemis44@gmail.com",
-        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+        user: email_user,
+        pass: email_pass, // Use your Gmail app password or account password
       },
     });
     // Define email options
     const mailOptions = {
-      from: "mulukendemis44@gmail.com",
+      from: email_user,
       to: email,
       subject: "Email Verification Code",
       text: `Your verification code is: ${verificationCode}`,
@@ -267,14 +270,14 @@ export const resendVerificationCode = async (req, res) => {
       port: 465,
       secure: true, // Use SSL/TLS
       auth: {
-        user: "mulukendemis44@gmail.com",
-        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+        user: email_user,
+        pass: email_pass, // Use your Gmail app password or account password
       },
     });
 
     // Define email options
     const mailOptions = {
-      from: "mulukendemis44@gmail.com",
+      from: email_user,
       to: email,
       subject: "Resend Verification Code",
       text: `Your new OTP(one time code)  is: ${verificationCode}`,
@@ -353,13 +356,13 @@ const sendPasswordResetEmail = async (email, token) => {
       port: 465,
       secure: true, // Use SSL/TLS
       auth: {
-        user: "mulukendemis44@gmail.com",
-        pass: "jnko xwtx rcvd plgq", // Use your Gmail app password or account password
+        user: email_user,
+        pass: email_pass, // Use your Gmail app password or account password
       },
     });
 
     const mailOptions = {
-      from: "mulukendemis44@gmail.com",
+      from: email_user,
       to: email,
       subject: "Password reset",
       html: `<p>You have requested a password reset. Please follow <a href="http://localhost:3000/resetpassword/${token}">this link</a> to reset your password. This link will expire in 1 hour.</p>`, // Close the href attribute properly
